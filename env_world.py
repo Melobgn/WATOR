@@ -3,41 +3,33 @@ import copy
 import random
 
 
-monde = [[0 for i in range(10)] for y in range(10)]
-nombre_poissons = 10
-nombre_requins = 5
+taille = 10
+nombre_poissons = 30
+nombre_requins = 10
 
-random.seed(12)   
-# Logique des poissons
-for i in range(nombre_poissons):
-    
-    row = randint(0, 9)
-    col = randint(0, 9)
-    if monde[row][col] == 0:
-            monde[row][col] = 1
+def creation_monde(taille, nombre_poissons, nombre_requins):
+    monde = [[0 for i in range(taille)] for y in range(taille)]
+    random.seed(12) 
 
-# Logique des requins
-for i in range(nombre_requins):
-    row = randint(0, 9)
-    col = randint(0, 9)
-    if monde[row][col] == 0:
-        monde[row][col] = 2
-
-monde_init = copy.deepcopy(monde)
+    for _ in range(nombre_poissons):
+            row, col = randint(0, taille -1), randint(0, taille -1)
+            if monde[row][col] == 0:
+                monde[row][col] = 1
 
     
-# affiche le monde
-for i in monde_init:
-    print(*i)
-print()
+    for _ in range(nombre_requins):
+            row, col = randint(0, taille -1), randint(0, taille -1)
+            if monde[row][col] == 0:
+                monde[row][col] = 2
+    
+    return monde 
 
-
-
-
-
-
-
-
+monde_init = creation_monde(taille, nombre_poissons, nombre_requins)
+random.seed(12) 
+monde_ready = copy.deepcopy(monde_init)
+    
+for i in monde_ready:
+      print(*i)
 
       
         
