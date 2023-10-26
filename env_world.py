@@ -4,7 +4,7 @@ import random
 
 
 taille = 10
-nombre_poissons = 30
+nombre_poissons = 23
 nombre_requins = 10
 
 def creation_monde(taille, nombre_poissons, nombre_requins):
@@ -25,8 +25,6 @@ def creation_monde(taille, nombre_poissons, nombre_requins):
     return monde 
 
 monde = creation_monde(taille, nombre_poissons, nombre_requins)
-random.seed(12) 
-monde_ready = copy.deepcopy(monde)
 
 
 def affichage(monde):
@@ -34,9 +32,12 @@ def affichage(monde):
         print(*i)
 
 def deplacer_les_poissons_et_les_requins(monde):
-     for row in monde:
-          for col in row:
-              return    
+     monde_bis = [[0 for i in range(taille)] for y in range(taille)]
+     random.seed(12)
+
+     return monde_bis
+        
+                 
         
 
 affichage(monde)
