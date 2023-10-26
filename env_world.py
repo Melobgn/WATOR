@@ -52,10 +52,10 @@ def deplacer_les_poissons_et_les_requins(monde):
     for i in range(len(monde)):  # Parcours des indices de ligne
         for j in range(len(monde[0])):  # Parcours des indices de colonne
             if monde[i][j]:
-                deplacement_possible = [(0, 1), (1, 0), (0, -1), (-1, 0)]
-                direction = random.choice(deplacement_possible)
+                deplacement_possible = [(0, 1), (1, 0), (0, -1), (-1, 0)] 
+                direction = random.choice(deplacement_possible) # déplacement en random des déplacement possible
                 x, y = (i + direction[0]) % taille, (j + direction[1]) % taille
-                monde_bis[x][y] = 1
+                monde_bis[x][y] = 1 # Permet de gérer la spécificité du torus
             else:
                 monde_bis[i][j] = monde[i][j]
     
