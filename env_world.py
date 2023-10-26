@@ -38,16 +38,34 @@ def affichage(monde):
     for i in monde:
         print(*i)
 
+# Affiche la carte monde secondire
+def affichage_bis(monde_bis):
+     for i in monde_bis:
+          print(*i)
+
+
 # déplace les poissons et les requins et créer le monde pour les verrous    
 def deplacer_les_poissons_et_les_requins(monde):
-     monde_bis = [[0 for i in range(taille)] for y in range(taille)]
-     random.seed(12)
-
-     return monde_bis
+    monde_bis = [[0 for i in range(taille)] for y in range(taille)]
+    random.seed(12)
+    
+    for i in range(len(monde)):  # Parcours des indices de ligne
+        for j in range(len(monde[0])):  # Parcours des indices de colonne
+            if monde[i][j]:
+                deplacement_possible = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+                direction = random.choice(deplacement_possible)
+                x, y = (i + direction[0]) % taille, (j + direction[1]) % taille
+                monde_bis[x][y] = 1
+            else:
+                monde_bis[i][j] = monde[i][j]
+    
+    return monde_bis
         
-                 
+              
         
 
 affichage(monde)
-print(deplacer_les_poissons_et_les_requins(monde))
+monde = deplacer_les_poissons_et_les_requins(monde)  # Met à jour la carte
+print()
+affichage(monde)
 
