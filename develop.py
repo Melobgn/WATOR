@@ -1,4 +1,3 @@
-while:
 class Requins:
     vies = 0
     def __init__(self, enregie):
