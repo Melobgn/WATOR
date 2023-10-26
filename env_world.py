@@ -24,16 +24,21 @@ def creation_monde(taille, nombre_poissons, nombre_requins):
     
     return monde 
 
-monde_init = creation_monde(taille, nombre_poissons, nombre_requins)
+monde = creation_monde(taille, nombre_poissons, nombre_requins)
 random.seed(12) 
-monde_ready = copy.deepcopy(monde_init)
-    
-for i in monde_ready:
-      print(*i)
+monde_ready = copy.deepcopy(monde)
 
-      
+
+def affichage(monde):
+    for i in monde:
+        print(*i)
+
+def deplacer_les_poissons_et_les_requins(monde):
+     for row in monde:
+          for col in row:
+              return    
         
 
-
-
+affichage(monde)
+print(deplacer_les_poissons_et_les_requins(monde))
 
