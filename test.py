@@ -57,6 +57,10 @@ class Planete:
         for i in self.monde:
             print(*i)
 
+class Poisson:
+    def __init__(self, mouvements, reproduction):
+        self.mouvements = mouvements
+        self.reproduction = reproduction
 
     def deplacer_poissons(self):
         deplacement_possible = [(0, 1), (1, 0), (0, -1), (-1, 0)]
@@ -81,6 +85,17 @@ class Planete:
             if not deplacement_reussi:
                
                 return self.monde
+            
+        def gestation(self):
+               def gestation(self):
+                self.gestation_time = 0
+    
+        if vide:
+            if self.gestation_time >= self.gestation_finie:     # if the gestation clock is past due:
+                self.cell.place(Poisson())         #   place a new fish at the current position
+                self.gestation_time = 0
+            else: self.gestation_time += 1
+
             
 
 
@@ -108,7 +123,7 @@ ma_planete.affichage()
 
 #affiche les coordonnees des poissons et des requins
 # ma_planete.coordoonees_poissons_requins()
-while chronons < 50:
+while chronons < 100:
     os.system('clear')
     ma_planete.deplacer_poissons()
     ma_planete.affichage()
