@@ -71,9 +71,9 @@ class Planete:
                 new_row = poisson['row'] + direction[0]
                 new_col = poisson['col'] + direction[1]
                 if 0 <= new_row < self.longueur and 0 <= new_col < self.largeur:
-                    if self.monde[new_row][new_col] == '\U0001f4a7':
-                        self.monde[poisson['row']][poisson['col']] = '\U0001f4a7'
-                        self.monde[new_row][new_col] = '\U0001f41f'
+                    if self.monde[new_row][new_col] == '\U0001f4a7': #eau
+                        self.monde[poisson['row']][poisson['col']] = '\U0001f4a7' #eau
+                        self.monde[new_row][new_col] = '\U0001f41f' #poisson
                         poisson['row'] = new_row
                         poisson['col'] = new_col
                         deplacement_reussi = True
@@ -83,8 +83,36 @@ class Planete:
                 return self.monde
             
 
+    def deplacer_requins(self):
+        for requin in self.requins:
+            directions_possibles = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+            random.shuffle(directions_possibles)
 
-# time.sleep(0.4)
+            deplacement_reussi = False
+
+            for direction in directions_possibles:
+                new_row = requin['row'] + direction[0]
+                new_col = requin['col'] + direction[1]
+
+                if 0 <= new_row < self.longueur and 0 <= new_col < self.largeur:
+                    if self.monde[new_row][new_col] == '\U0001f41f':  # poisson
+                        self.monde[requin['row']][requin['col']] = '\U0001f4a7'  # eau
+                        self.monde[new_row][new_col] = '\U0001f988'  # requin
+                        requin['row'] = new_row
+                        requin['col'] = new_col
+                        deplacement_reussi = True
+                    elif self.monde[new_row][new_col] == '\U0001f4a7':  # eau
+                        self.monde[requin['row']][requin['col']] = '\U0001f4a7'  # eau
+                        self.monde[new_row][new_col] = '\U0001f988'  # requin
+                        requin['row'] = new_row
+                        requin['col'] = new_col
+                        deplacement_reussi = True
+                    if deplacement_reussi:
+                        break
+
+        return self.monde
+
+
   
 
 
@@ -96,8 +124,6 @@ nombre_requins = 5
 chronons = 0
 
 # création de l'instance de la classe Planete
-
-
 ma_planete = Planete(0, 0)
 
 # initialisation du monde
@@ -106,11 +132,11 @@ ma_planete.creation_monde(longueur, largeur, nombre_poissons, nombre_requins)
 # affichage du monde
 ma_planete.affichage()
 
-#affiche les coordonnees des poissons et des requins
-# ma_planete.coordoonees_poissons_requins()
+# boucle temporel des chronons
 while chronons < 100:
     os.system('clear')
     ma_planete.deplacer_poissons()
+    ma_planete.deplacer_requins()
     ma_planete.affichage()
     print()
     chronons += 1
