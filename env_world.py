@@ -147,7 +147,7 @@ class Planete:
 # Initialisation des valeurs
 longueur = 10
 largeur = 8
-nombre_poissons = 10
+nombre_poissons = 20
 nombre_requins = 5
 chronons = 0
 
