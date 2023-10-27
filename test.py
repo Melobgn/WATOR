@@ -57,35 +57,63 @@ class Planete:
         for i in self.monde:
             print(*i)
 
-class Poisson:
-    def __init__(self, planete, reproduction=8):
-        self.planete = planete
+class Fish:
+    def __init__(self, creation_monde, reproduction=8):
+        self.creation_monde = creation_monde
         self.reproduction = reproduction
 
     def deplacer_poissons(self):
         deplacement_possible = [(0, 1), (1, 0), (0, -1), (-1, 0)]
-    
-        for poisson in self.planete.poissons:
+
+        poissons_survivants = []  # Nouvelle liste pour les poissons qui ont survécu
+
+        for poisson in self.creation_monde.poissons:
             directions_possibles = deplacement_possible[:]
             random.shuffle(directions_possibles)
 
-            deplacement_reussi = False
+            poisson_mange = False
+
+            # Vérifier d'abord si un requin est à proximité
+            for direction in directions_possibles:
+                new_row = poisson['row'] + direction[0]
+                new_col = poisson['col'] + direction[1]
+
+                for requin in self.creation_monde.requins:
+                    if abs(new_row - requin['row']) <= 1 and abs(new_col - requin['col']) <= 1:
+                        self.creation_monde[poisson['row']][poisson['col']] = '\U0001f4a7'  # le poisson est mangé
+                        poisson_mange = True
+                        break
+
+                if poisson_mange:
+                    break
+
+            if not poisson_mange:
+                poissons_survivants.append(poisson)
+
+        # Ne tentez de supprimer les poissons que s'ils ont été mangés
+        if poisson_mange:
+            self.creation_monde.poissons.remove(poisson)
+
+        self.creation_monde.poissons = poissons_survivants  # Mettre à jour la liste des poissons survivants
+
+        # Maintenant, effectuez le déplacement pour les poissons survivants
+        for poisson in poissons_survivants:
+            directions_possibles = deplacement_possible[:]
+            random.shuffle(directions_possibles)
 
             for direction in directions_possibles:
                 new_row = poisson['row'] + direction[0]
                 new_col = poisson['col'] + direction[1]
-                if 0 <= new_row < self.planete.longueur and 0 <= new_col < self.planete.largeur:
-                    if self.planete.monde[new_row][new_col] == '\U0001f4a7':
-                        self.planete.monde[poisson['row']][poisson['col']] = '\U0001f4a7'
-                        self.planete.monde[new_row][new_col] = '\U0001f41f'
+
+                if 0 <= new_row < self.longueur and 0 <= new_col < self.largeur:
+                    if self.creation_monde[new_row][new_col] == '\U0001f4a7':  # eau
+                        self.creation_monde[poisson['row']][poisson['col']] = '\U0001f4a7'  # eau
+                        self.creation_monde[new_row][new_col] = '\U0001f41f'  # poisson
                         poisson['row'] = new_row
                         poisson['col'] = new_col
-                        deplacement_reussi = True
                         break
-            if not deplacement_reussi:
                
-                return self.monde
-            
+
     def gestation(self):
         self.gestation_time = 0
         if self.gestation_time >= self.gestation_finie:     # if the gestation clock is past due:
@@ -113,12 +141,12 @@ chronons = 0
 
 ma_planete = Planete(0, 0)
 
-# initialisation du monde
+# initialisation du creation_monde
 ma_planete.creation_monde(longueur, largeur, nombre_poissons, nombre_requins)
 
 # affichage du monde
 ma_planete.affichage()
-poisson_instance = Poisson(ma_planete)
+poisson_instance = Fish(ma_planete)
 #affiche les coordonnees des poissons et des requins
 # ma_planete.coordoonees_poissons_requins()
 while chronons < 100:
