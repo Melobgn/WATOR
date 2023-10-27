@@ -71,7 +71,8 @@ class Planete:
 
 ma_planete = Planete(10, 10, 10, 5)
 ma_planete.affichage()
-ma_planete.coord() 
+ma_planete.coord()
+print()
 ma_planete.deplacer_poissons()
 #Afficher la planète après déplacement
 ma_planete.affichage()
