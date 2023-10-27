@@ -1,48 +1,54 @@
-# partie Antoine à supprimer (double)
-# import random
-# from random import randint
+# 1 récupérer LES positions des requins et des poissons
+class Position:
+    def __init__(self,x ,y):
+        self.x = x
+        self.y = y
 
-# génération matrice
-# monde = x = [[randint(0, 0) for i in range(10)] for i in range(10)]
-# for row in monde:
-#     print(*row)
+# position des requins
+class Requins(Position):
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.items = 2
 
+# position des poissons
+class Poissons(Position):
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.type = 1
+
+# matrice 
+'''partie à supprimer '''
 monde = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 2, 1, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 1, 2, 0, 0, 0, 0],
+    [0, 0, 0, 2, 1, 0, 0, 1, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 2, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 for row in monde:
-    print(*row)
+    # print(*row)
+    '''partie à supprimer '''
 
+# renvoyer les positions
+    def trouver_position(matrice, items):
+        for i in range(len(matrice)):
+            for j in range(len(matrice[0])):
+                if matrice[i][j] == items:
+                    yield i, j
 
-# # partie à conserver Cécile
-# class Requins:
-#     points_de_vie = 6
-#     def __init__(self, id_requin, enregie):
-#         self.id_requin = id_requin
-#         self.energie = enregie
-    
-#     def obtenir_position(self, requin, poisson):
-# # indique la position des requins et des poissons avec x et y
-#         pass
+poisson = trouver_position(monde, 1)
+requin = trouver_position(monde, 2)
 
-#     def mouvement(self):
-# # vérifie si requin est la même COLONNE que poisson
+# retourne la position des poissons et des requins 'x, y'
+for i, j in poisson:
+    print(i, j)
 
-# # vérifie si requin est la même LIGNE que poisson
- 
-# # vérifie si position requin et position poisson sont ADJACENTS
-#         pass
+for i, j in requin:
+    print(i, j)
 
-
-#     def manger(self):
-# # si position requin et poissont adjacents REQUIN : points_de_vie += 1
-# #                                                   + remplace cellule 1 (poisson) par 2 (requin)
-# #                                                   + cellule 1 est supprimé
-#         pass
+# 2 créer une condition : si le requin se place sur un poisson (2 remplace 1)
+    # le requin gagne 1 chronons (c.à.d. de l'énergie = 6 chronons au max)
+    # le poisson meurt et disparait
