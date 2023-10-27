@@ -6,10 +6,15 @@ import random
 taille = 10
 
 # Définir le nombre de poissons de départ
-nombre_poissons = 23
+nombre_poissons = 10
 
 # Définir le nombre de requins de départ
-nombre_requins = 10
+nombre_requins = 5
+
+# sauvergade des indices poissons et requins
+poissons = []
+requins = []
+
 
 # fonction pour créer le monde de départ
 def creation_monde(taille, nombre_poissons, nombre_requins):
@@ -17,18 +22,22 @@ def creation_monde(taille, nombre_poissons, nombre_requins):
     random.seed(12) 
 
     # Place les poissons dans la grille
-    for _ in range(nombre_poissons):
+    for _ in range(nombre_poissons+1):
             row, col = randint(0, taille -1), randint(0, taille -1)
             if monde[row][col] == 0:
                 monde[row][col] = 1
+                poissons.append((row, col))
 
     # Place les requins dans la grille
-    for _ in range(nombre_requins):
+    for _ in range(nombre_requins+1):
             row, col = randint(0, taille -1), randint(0, taille -1)
             if monde[row][col] == 0:
                 monde[row][col] = 2
+                requins.append((row, col))
     
-    return monde 
+    return monde
+
+
 
 # Encapsule la map dans la variable monde
 monde = creation_monde(taille, nombre_poissons, nombre_requins)
@@ -43,29 +52,19 @@ def affichage_bis(monde_bis):
      for i in monde_bis:
           print(*i)
 
+# Le monde pour les verrous
+monde_bis = [[0 for i in range(taille)] for y in range(taille)]
+random.seed(12)
 
-# déplace les poissons et les requins et créer le monde pour les verrous    
-def deplacer_les_poissons_et_les_requins(monde):
-    monde_bis = [[0 for i in range(taille)] for y in range(taille)]
-    random.seed(12)
-    
-    for i in range(len(monde)):  # Parcours des indices de ligne
-        for j in range(len(monde[0])):  # Parcours des indices de colonne
-            if monde[i][j]:
-                deplacement_possible = [(0, 1), (1, 0), (0, -1), (-1, 0)] 
-                direction = random.choice(deplacement_possible) # déplacement en random des déplacement possible
-                x, y = (i + direction[0]) % taille, (j + direction[1]) % taille
-                monde_bis[x][y] = 1 # Permet de gérer la spécificité du torus
-            else:
-                monde_bis[i][j] = monde[i][j]
-    
-    return monde_bis
+
         
               
         
-
+creation_monde(taille, nombre_poissons, nombre_requins)
 affichage(monde)
-monde = deplacer_les_poissons_et_les_requins(monde)  # Met à jour la carte
 print()
-affichage(monde)
+print(poissons)
+print()
+print(requins)
+
 
