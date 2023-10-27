@@ -97,4 +97,5 @@ ma_planete.affichage()
 #affiche les coordonnees des poissons et des requins
 ma_planete.coordoonees_poissons_requins()
 
-print(ma_planete.deplacer_poisson(7, 4, "haut"))
+ma_planete.deplacer_poisson(7, 4, "haut")
+ma_planete.affichage()
