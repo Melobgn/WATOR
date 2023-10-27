@@ -58,11 +58,9 @@ class Planete:
             print(*i)
 
 class Poisson:
-    def __init__(self, planete, mouvements, reproduction):
+    def __init__(self, planete, reproduction=8):
         self.planete = planete
-        self.mouvements = mouvements
         self.reproduction = reproduction
-        self.reproduction = 8
 
     def deplacer_poissons(self):
         deplacement_possible = [(0, 1), (1, 0), (0, -1), (-1, 0)]
@@ -76,10 +74,10 @@ class Poisson:
             for direction in directions_possibles:
                 new_row = poisson['row'] + direction[0]
                 new_col = poisson['col'] + direction[1]
-                if 0 <= new_row < self.longueur and 0 <= new_col < self.largeur:
-                    if self.monde[new_row][new_col] == '\U0001f4a7':
-                        self.monde[poisson['row']][poisson['col']] = '\U0001f4a7'
-                        self.monde[new_row][new_col] = '\U0001f41f'
+                if 0 <= new_row < self.planete.longueur and 0 <= new_col < self.planete.largeur:
+                    if self.planete.monde[new_row][new_col] == '\U0001f4a7':
+                        self.planete.monde[poisson['row']][poisson['col']] = '\U0001f4a7'
+                        self.planete.monde[new_row][new_col] = '\U0001f41f'
                         poisson['row'] = new_row
                         poisson['col'] = new_col
                         deplacement_reussi = True
@@ -120,7 +118,7 @@ ma_planete.creation_monde(longueur, largeur, nombre_poissons, nombre_requins)
 
 # affichage du monde
 ma_planete.affichage()
-poisson_instance = Poisson(mouvements, reproduction)
+poisson_instance = Poisson(ma_planete)
 #affiche les coordonnees des poissons et des requins
 # ma_planete.coordoonees_poissons_requins()
 while chronons < 100:
