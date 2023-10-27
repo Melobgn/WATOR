@@ -1,4 +1,7 @@
 import random
+import time
+import os
+
 
 class Planete:
     def __init__(self, pos_x, pos_y):
@@ -7,14 +10,14 @@ class Planete:
         self.monde = []  # Initialiser la variable "monde"
     
     # fonction pour créer le monde de départ
-    def creation_monde(self, longueur, largueur, nombre_poissons, nombre_requins):
+    def creation_monde(self, longueur, largeur, nombre_poissons, nombre_requins):
         self.longueur = longueur
-        self.largueur = largueur
+        self.largeur = largeur
         self.nombre_poissons = nombre_poissons
         self.nombre_requins = nombre_requins
-        monde = [[0 for i in range(largueur)] for y in range(longueur)]  # Créer une grille 2D pour le monde
+        monde = [['\U0001f4a7' for i in range(largeur)] for y in range(longueur)]  # Créer une grille 2D pour le monde
         random.seed(12)
-        coordonnees_possibles = [(x, y) for x in range(longueur) for y in range(largueur)]
+        coordonnees_possibles = [(x, y) for x in range(longueur) for y in range(largeur)]
         random.shuffle(coordonnees_possibles)
 
         self.poissons = []  # Liste pour stocker les poissons
@@ -25,7 +28,7 @@ class Planete:
             if not coordonnees_possibles:
                 break  # Si on a utilisé toutes les coordonnées possibles, sortir de la boucle
             row, col = coordonnees_possibles.pop()
-            monde[row][col] = 1
+            monde[row][col] = '\U0001f41f'
             self.poissons.append({'row': row, 'col': col})
 
         # Place les requins dans la grille
@@ -33,7 +36,7 @@ class Planete:
             if not coordonnees_possibles:
                 break  # Si on a utilisé toutes les coordonnées possibles, sortir de la boucle
             row, col = coordonnees_possibles.pop()
-            monde[row][col] = 2
+            monde[row][col] = '\U0001f988'
             self.requins.append({'row': row, 'col': col})
 
         self.monde = monde  # Mets à jour la variable de la planète avec le monde créé
@@ -54,48 +57,61 @@ class Planete:
         for i in self.monde:
             print(*i)
 
-    #essai pour déplacer les poissons
-    def deplacer_poisson(self, x_poisson, y_poisson, direction):
+
+    def deplacer_poissons(self):
+        deplacement_possible = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+    
         for poisson in self.poissons:
-            if poisson['row'] == x_poisson and poisson['col'] == y_poisson:
-                x = poisson['row']
-                y = poisson['col']
-                
-                if direction == "haut" and x > 0:
-                    self.monde[x][y], self.monde[x-1][y] = self.monde[x-1][y], self.monde[x][y]
-                if direction == "bas" and x < 0:
-                    self.monde[x][y], self.monde[x+1][y] = self.monde[x+1][y], self.monde[x][y]
-                
-                if direction == "droite" and y > 0:
-                    self.monde[x][y], self.monde[x][y+1] = self.monde[x][y+1], self.monde[x][y]
-                
-                if direction == "gauche" and y < 0:
-                    self.monde[x][y], self.monde[x][y-1] = self.monde[x][y]-1, self.monde[x][y]
-                
+            directions_possibles = deplacement_possible[:]
+            random.shuffle(directions_possibles)
+
+            deplacement_reussi = False
+
+            for direction in directions_possibles:
+                new_row = poisson['row'] + direction[0]
+                new_col = poisson['col'] + direction[1]
+                if 0 <= new_row < self.longueur and 0 <= new_col < self.largeur:
+                    if self.monde[new_row][new_col] == '\U0001f4a7':
+                        self.monde[poisson['row']][poisson['col']] = '\U0001f4a7'
+                        self.monde[new_row][new_col] = '\U0001f41f'
+                        poisson['row'] = new_row
+                        poisson['col'] = new_col
+                        deplacement_reussi = True
+                        break
+            if not deplacement_reussi:
+               
                 return self.monde
+            
 
-                
 
-
+# time.sleep(0.4)
+  
 
 
 # Initialisation des valeurs
 longueur = 10
-largueur = 8
+largeur = 8
 nombre_poissons = 10
 nombre_requins = 5
+chronons = 0
 
 # création de l'instance de la classe Planete
+
+
 ma_planete = Planete(0, 0)
 
 # initialisation du monde
-ma_planete.creation_monde(longueur, largueur, nombre_poissons, nombre_requins)
+ma_planete.creation_monde(longueur, largeur, nombre_poissons, nombre_requins)
 
 # affichage du monde
 ma_planete.affichage()
 
 #affiche les coordonnees des poissons et des requins
-ma_planete.coordoonees_poissons_requins()
-
-ma_planete.deplacer_poisson(7, 4, "haut")
-ma_planete.affichage()
+# ma_planete.coordoonees_poissons_requins()
+while chronons < 100:
+    os.system('clear')
+    ma_planete.deplacer_poissons()
+    ma_planete.affichage()
+    print()
+    chronons += 1
+    time.sleep(0.4)
