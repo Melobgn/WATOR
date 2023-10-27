@@ -54,10 +54,30 @@ class Planete:
         for i in self.monde:
             print(*i)
 
-    #deplace les poissons
-    def deplacer_poissons(self, dx, dy):
-        self.pos_x += dx
-        self.pos_y += dy
+    #essai pour déplacer les poissons
+    def deplacer_poisson(self, x_poisson, y_poisson, direction):
+        for poisson in self.poissons:
+            if poisson['row'] == x_poisson and poisson['col'] == y_poisson:
+                x = poisson['row']
+                y = poisson['col']
+                
+                if direction == "haut" and x > 0:
+                    self.monde[x][y], self.monde[x-1][y] = self.monde[x-1][y], self.monde[x][y]
+                if direction == "bas" and x < 0:
+                    self.monde[x][y], self.monde[x+1][y] = self.monde[x+1][y], self.monde[x][y]
+                
+                if direction == "droite" and y > 0:
+                    self.monde[x][y], self.monde[x][y+1] = self.monde[x][y+1], self.monde[x][y]
+                
+                if direction == "gauche" and y < 0:
+                    self.monde[x][y], self.monde[x][y-1] = self.monde[x][y]-1, self.monde[x][y]
+                
+                return self.monde
+
+                
+
+
+
 
 # Initialisation des valeurs
 longueur = 10
@@ -76,3 +96,5 @@ ma_planete.affichage()
 
 #affiche les coordonnees des poissons et des requins
 ma_planete.coordoonees_poissons_requins()
+
+print(ma_planete.deplacer_poisson(7, 4, "haut"))
