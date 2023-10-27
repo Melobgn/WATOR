@@ -17,8 +17,8 @@ class Planete:
         coordonnees_possibles = [(x, y) for x in range(longueur) for y in range(largueur)]
         random.shuffle(coordonnees_possibles)
 
-        poissons = []  # Liste pour stocker les poissons
-        requins = []   # Liste pour stocker les requins
+        self.poissons = []  # Liste pour stocker les poissons
+        self.requins = []   # Liste pour stocker les requins
 
         # Place les poissons dans la grille
         for poisson in range(nombre_poissons):
@@ -26,7 +26,7 @@ class Planete:
                 break  # Si on a utilisé toutes les coordonnées possibles, sortir de la boucle
             row, col = coordonnees_possibles.pop()
             monde[row][col] = 1
-            poissons.append({'row': row, 'col': col})
+            self.poissons.append({'row': row, 'col': col})
 
         # Place les requins dans la grille
         for requin in range(nombre_requins):
@@ -34,11 +34,20 @@ class Planete:
                 break  # Si on a utilisé toutes les coordonnées possibles, sortir de la boucle
             row, col = coordonnees_possibles.pop()
             monde[row][col] = 2
-            requins.append({'row': row, 'col': col})
+            self.requins.append({'row': row, 'col': col})
 
         self.monde = monde  # Mets à jour la variable de la planète avec le monde créé
         
         return monde
+
+    def coordoonees_poissons_requins(self):
+        # Afficher les coordonnées des poissons
+        for poisson in self.poissons:
+            print(f"Coordonnées du poisson : ({poisson['row']}, {poisson['col']})")
+
+        # Afficher les coordonnées des requins
+        for requin in self.requins:
+            print(f"Coordonnées du requin : ({requin['row'], requin['col']})")
 
     #affiche le monde
     def affichage(self):
@@ -49,8 +58,6 @@ class Planete:
     def deplacer_poissons(self, dx, dy):
         self.pos_x += dx
         self.pos_y += dy
-
-
 
 # Initialisation des valeurs
 longueur = 10
@@ -66,3 +73,6 @@ ma_planete.creation_monde(longueur, largueur, nombre_poissons, nombre_requins)
 
 # affichage du monde
 ma_planete.affichage()
+
+#affiche les coordonnees des poissons et des requins
+ma_planete.coordoonees_poissons_requins()
