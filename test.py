@@ -58,14 +58,16 @@ class Planete:
             print(*i)
 
 class Poisson:
-    def __init__(self, mouvements, reproduction):
+    def __init__(self, planete, mouvements, reproduction):
+        self.planete = planete
         self.mouvements = mouvements
         self.reproduction = reproduction
+        self.reproduction = 8
 
     def deplacer_poissons(self):
         deplacement_possible = [(0, 1), (1, 0), (0, -1), (-1, 0)]
     
-        for poisson in self.poissons:
+        for poisson in self.planete.poissons:
             directions_possibles = deplacement_possible[:]
             random.shuffle(directions_possibles)
 
@@ -86,15 +88,13 @@ class Poisson:
                
                 return self.monde
             
-        def gestation(self):
-               def gestation(self):
+    def gestation(self):
+        self.gestation_time = 0
+        if self.gestation_time >= self.gestation_finie:     # if the gestation clock is past due:
+                self.poisson['row']
+                self.poisson['col']       #   place a new fish at the current position
                 self.gestation_time = 0
-    
-        if vide:
-            if self.gestation_time >= self.gestation_finie:     # if the gestation clock is past due:
-                self.cell.place(Poisson())         #   place a new fish at the current position
-                self.gestation_time = 0
-            else: self.gestation_time += 1
+        else: self.gestation_time += 1
 
             
 
@@ -120,12 +120,12 @@ ma_planete.creation_monde(longueur, largeur, nombre_poissons, nombre_requins)
 
 # affichage du monde
 ma_planete.affichage()
-
+poisson_instance = Poisson(mouvements, reproduction)
 #affiche les coordonnees des poissons et des requins
 # ma_planete.coordoonees_poissons_requins()
 while chronons < 100:
     os.system('clear')
-    ma_planete.deplacer_poissons()
+    poisson_instance.deplacer_poissons()
     ma_planete.affichage()
     print()
     chronons += 1
