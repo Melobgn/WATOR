@@ -44,11 +44,11 @@ class Planete:
         return monde
 
     def coordoonees_poissons_requins(self):
-        # Afficher les coordonnées des poissons
+        # Affiche les coordonnées des poissons
         for poisson in self.poissons:
             print(f"Coordonnées du poisson : ({poisson['row']}, {poisson['col']})")
 
-        # Afficher les coordonnées des requins
+        # Affiche les coordonnées des requins
         for requin in self.requins:
             print(f"Coordonnées du requin : ({requin['row'], requin['col']})")
 
@@ -69,7 +69,7 @@ class Planete:
 
             poisson_mange = False
 
-            # Vérifier d'abord si un requin est à proximité
+            # Vérifie d'abord si un requin est à proximité
             for direction in directions_possibles:
                 new_row = poisson['row'] + direction[0]
                 new_col = poisson['col'] + direction[1]
@@ -86,7 +86,7 @@ class Planete:
             if not poisson_mange:
                 poissons_survivants.append(poisson)
 
-        # Ne tentez de supprimer les poissons que s'ils ont été mangés
+        # Ne tente de supprimer les poissons que s'ils ont été mangés
         if poisson_mange:
             self.poissons.remove(poisson)
 
@@ -147,8 +147,8 @@ class Planete:
 # Initialisation des valeurs
 longueur = 10
 largeur = 8
-nombre_poissons = 20
-nombre_requins = 5
+nombre_poissons = 10
+nombre_requins = 2
 chronons = 0
 
 # création de l'instance de la classe Planete
@@ -156,6 +156,7 @@ ma_planete = Planete(0, 0)
 
 # initialisation du monde
 ma_planete.creation_monde(longueur, largeur, nombre_poissons, nombre_requins)
+
 
 # affichage du monde
 ma_planete.affichage()
@@ -166,6 +167,12 @@ while chronons < 100:
     ma_planete.deplacer_poissons()
     ma_planete.deplacer_requins()
     ma_planete.affichage()
+
+# Affiche le chronon, le nombre de requins, le nombre initial de poissons et le nombre de poissons survivants
+    poissons_survivants = len(ma_planete.poissons)
+    print(f"Chronons en cours : {chronons}\nRequins : {nombre_requins}\nNombre initial de poissons : {nombre_poissons}\nPoissons survivants : {poissons_survivants}")
+
+          
     print()
     chronons += 1
-    time.sleep(0.4)
+    time.sleep(2)
