@@ -16,26 +16,29 @@ class Planete:
         self.nombre_poissons = nombre_poissons
         self.nombre_requins = nombre_requins
         monde = [['\U0001f4a7' for i in range(largeur)] for y in range(longueur)]  # Créer une grille 2D pour le monde
+        
         random.seed(12)
+
+    def coordonnees(self):
         coordonnees_possibles = [(x, y) for x in range(longueur) for y in range(largeur)]
         random.shuffle(coordonnees_possibles)
 
+    def placement(self):
         self.poissons = []  # Liste pour stocker les poissons
-        self.requins = []   # Liste pour stocker les requins
-
+        self.requins = []   # Liste pour stocker les requins  
         # Place les poissons dans la grille
         for poisson in range(nombre_poissons):
-            if not coordonnees_possibles:
+            if not self.coordonnees_possibles:
                 break  # Si on a utilisé toutes les coordonnées possibles, sortir de la boucle
-            row, col = coordonnees_possibles.pop()
+            row, col = self.coordonnees_possibles.pop()
             monde[row][col] = '\U0001f41f'
             self.poissons.append({'row': row, 'col': col})
 
         # Place les requins dans la grille
         for requin in range(nombre_requins):
-            if not coordonnees_possibles:
+            if not self.coordonnees_possibles:
                 break  # Si on a utilisé toutes les coordonnées possibles, sortir de la boucle
-            row, col = coordonnees_possibles.pop()
+            row, col = self.coordonnees_possibles.pop()
             monde[row][col] = '\U0001f988'
             self.requins.append({'row': row, 'col': col})
 
@@ -61,7 +64,6 @@ class Fish(Planete):
     def __init__(self, reproduction=8):
         self.reproduction = reproduction
 
-
     def deplacer_poissons(self):
         super().creation_monde(longueur, largeur, nombre_poissons, nombre_requins)
         deplacement_possible = [(0, 1), (1, 0), (0, -1), (-1, 0)]
@@ -86,10 +88,10 @@ class Fish(Planete):
                         break
 
                 if poisson_mange:
-                        break
+                    break
 
             if not poisson_mange:
-                        poissons_survivants.append(poisson)
+                    poissons_survivants.append(poisson)
 
         # Ne tentez de supprimer les poissons que s'ils ont été mangés
         if poisson_mange:
@@ -113,7 +115,7 @@ class Fish(Planete):
                         poisson['row'] = new_row
                         poisson['col'] = new_col
                         break
-        return self.monde
+
 
     # def gestation(self):
     #     self.gestation_time = 0
@@ -136,6 +138,7 @@ largeur = 8
 nombre_poissons = 10
 nombre_requins = 5
 chronons = 0
+
 
 # création de l'instance de la classe Planete
 
