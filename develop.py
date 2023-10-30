@@ -32,16 +32,7 @@ class Planete:
             self.poissons.append({'row': row, 'col': col})
 
         # Place les requins dans la grille
-        for requin in range(nombre_requins):
-            if not coordonnees_possibles:
-                break  # Si on a utilisé toutes les coordonnées possibles, sortir de la boucle
-            row, col = coordonnees_possibles.pop()
-            monde[row][col] = '\U0001f988'
-            self.requins.append({'row': row, 'col': col})
 
-        self.monde = monde  # Mets à jour la variable de la planète avec le monde créé
-        
-        return monde
 
     def coordoonees_poissons_requins(self):
         # Afficher les coordonnées des poissons
@@ -57,71 +48,30 @@ class Planete:
         for i in self.monde:
             print(*i)
 
-class Fish:
-    def __init__(self, creation_monde, reproduction=8):
-        self.creation_monde = creation_monde
-        self.reproduction = reproduction
 
     def deplacer_poissons(self):
         deplacement_possible = [(0, 1), (1, 0), (0, -1), (-1, 0)]
-
-        poissons_survivants = []  # Nouvelle liste pour les poissons qui ont survécu
-
-        for poisson in self.creation_monde.poissons:
+    
+        for poisson in self.poissons:
             directions_possibles = deplacement_possible[:]
             random.shuffle(directions_possibles)
 
-            poisson_mange = False
-
-            # Vérifier d'abord si un requin est à proximité
-            for direction in directions_possibles:
-                new_row = poisson['row'] + direction[0]
-                new_col = poisson['col'] + direction[1]
-
-                for requin in self.creation_monde.requins:
-                    if abs(new_row - requin['row']) <= 1 and abs(new_col - requin['col']) <= 1:
-                        self.creation_monde.poissons[poisson['row']][poisson['col']] = '\U0001f4a7'  # le poisson est mangé
-                        poisson_mange = True
-                        break
-
-                if poisson_mange:
-                    break
-
-            if not poisson_mange:
-                poissons_survivants.append(poisson)
-
-        # Ne tentez de supprimer les poissons que s'ils ont été mangés
-        if poisson_mange:
-            self.creation_monde.poissons.remove(poisson)
-
-        self.creation_monde.poissons = poissons_survivants  # Mettre à jour la liste des poissons survivants
-
-        # Maintenant, effectuez le déplacement pour les poissons survivants
-        for poisson in poissons_survivants:
-            directions_possibles = deplacement_possible[:]
-            random.shuffle(directions_possibles)
+            deplacement_reussi = False
 
             for direction in directions_possibles:
                 new_row = poisson['row'] + direction[0]
                 new_col = poisson['col'] + direction[1]
-
-                if 0 <= new_row < self.creation_monde.longueur and 0 <= new_col < self.creation_monde.largeur:
-                    if self.creation_monde[new_row][new_col] == '\U0001f4a7':  # eau
-                        self.creation_monde[poisson['row']][poisson['col']] = '\U0001f4a7'  # eau
-                        self.creation_monde[new_row][new_col] = '\U0001f41f'  # poisson
+                if 0 <= new_row < self.longueur and 0 <= new_col < self.largeur:
+                    if self.monde[new_row][new_col] == '\U0001f4a7':
+                        self.monde[poisson['row']][poisson['col']] = '\U0001f4a7'
+                        self.monde[new_row][new_col] = '\U0001f41f'
                         poisson['row'] = new_row
                         poisson['col'] = new_col
+                        deplacement_reussi = True
                         break
+            if not deplacement_reussi:
                
-
-    def gestation(self):
-        self.gestation_time = 0
-        if self.gestation_time >= self.gestation_finie:     # if the gestation clock is past due:
-                self.poisson['row']
-                self.poisson['col']       #   place a new fish at the current position
-                self.gestation_time = 0
-        else: self.gestation_time += 1
-
+                return self.monde
             
 
 
@@ -141,18 +91,22 @@ chronons = 0
 
 ma_planete = Planete(0, 0)
 
-# initialisation du creation_monde
+# initialisation du monde
 ma_planete.creation_monde(longueur, largeur, nombre_poissons, nombre_requins)
 
 # affichage du monde
 ma_planete.affichage()
-poisson_instance = Fish(ma_planete)
+
 #affiche les coordonnees des poissons et des requins
 # ma_planete.coordoonees_poissons_requins()
 while chronons < 100:
     os.system('clear')
-    poisson_instance.deplacer_poissons()
+    ma_planete.deplacer_poissons()
     ma_planete.affichage()
     print()
     chronons += 1
     time.sleep(0.4)
+
+
+# REQUINS (cécile)
+
