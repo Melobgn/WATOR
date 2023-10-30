@@ -17,8 +17,7 @@ class Planete:
         self.nombre_requins = nombre_requins
         monde = [['\U0001f4a7' for i in range(largeur)] for y in range(longueur)]  # Créer une grille 2D pour le monde
         random.seed(12)
-        coordonnees_possibles = [(x, y) for x in range(longueur) for y in range(largeur)]
-        random.shuffle(coordonnees_possibles)
+        
 
         self.poissons = []  # Liste pour stocker les poissons
         self.requins = []   # Liste pour stocker les requins
@@ -44,47 +43,101 @@ class Planete:
         return monde
 
     def coordoonees_poissons_requins(self):
-        # Afficher les coordonnées des poissons
+        # Affiche les coordonnées des poissons
         for poisson in self.poissons:
             print(f"Coordonnées du poisson : ({poisson['row']}, {poisson['col']})")
 
-        # Afficher les coordonnées des requins
+        # Affiche les coordonnées des requins
         for requin in self.requins:
             print(f"Coordonnées du requin : ({requin['row'], requin['col']})")
 
     #affiche le monde
-    def affichage(self):
-        for i in self.monde:
-            print(*i)
-
-
-    def deplacer_poissons(self):
-        deplacement_possible = [(0, 1), (1, 0), (0, -1), (-1, 0)]
     
+
+
+    def directions(self):
+        deplacement_possible = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+
+        poissons_survivants = []  # Nouvelle liste pour les poissons qui ont survécu
+
         for poisson in self.poissons:
             directions_possibles = deplacement_possible[:]
+            random.shuffle(directions_possibles)
+
+            poisson_mange = False
+
+            # Vérifie d'abord si un requin est à proximité
+            for direction in directions_possibles:
+                new_row = poisson['row'] + direction[0]
+                new_col = poisson['col'] + direction[1]
+
+                for requin in self.requins:
+                    if abs(new_row - requin['row']) <= 1 and abs(new_col - requin['col']) <= 1:
+                        self.monde[poisson['row']][poisson['col']] = '\U0001f4a7'  # le poisson est mangé
+                        poisson_mange = True
+                        break
+
+                if poisson_mange:
+                    break
+
+            if not poisson_mange:
+                poissons_survivants.append(poisson)
+
+        # Ne tente de supprimer les poissons que s'ils ont été mangés
+        if poisson_mange:
+            self.poissons.remove(poisson)
+
+        self.poissons = poissons_survivants  # Mettre à jour la liste des poissons survivants
+
+        # Maintenant, effectuez le déplacement pour les poissons survivants
+        for poisson in poissons_survivants:
+            directions_possibles = deplacement_possible[:]
+            random.shuffle(directions_possibles)
+
+            for direction in directions_possibles:
+                new_row = poisson['row'] + direction[0]
+                new_col = poisson['col'] + direction[1]
+
+                if 0 <= new_row < self.longueur and 0 <= new_col < self.largeur:
+                    if self.monde[new_row][new_col] == '\U0001f4a7':  # eau
+                        self.monde[poisson['row']][poisson['col']] = '\U0001f4a7'  # eau
+                        self.monde[new_row][new_col] = '\U0001f41f'  # poisson
+                        poisson['row'] = new_row
+                        poisson['col'] = new_col
+                        break
+
+
+
+    def deplacer_requins(self):
+        for requin in self.requins:
+            directions_possibles = [(0, 1), (0, -1), (1, 0), (-1, 0)]
             random.shuffle(directions_possibles)
 
             deplacement_reussi = False
 
             for direction in directions_possibles:
-                new_row = poisson['row'] + direction[0]
-                new_col = poisson['col'] + direction[1]
+                new_row = requin['row'] + direction[0]
+                new_col = requin['col'] + direction[1]
+
                 if 0 <= new_row < self.longueur and 0 <= new_col < self.largeur:
-                    if self.monde[new_row][new_col] == '\U0001f4a7':
-                        self.monde[poisson['row']][poisson['col']] = '\U0001f4a7'
-                        self.monde[new_row][new_col] = '\U0001f41f'
-                        poisson['row'] = new_row
-                        poisson['col'] = new_col
+                    if self.monde[new_row][new_col] == '\U0001f41f':  # poisson
+                        self.monde[requin['row']][requin['col']] = '\U0001f4a7'  # eau
+                        self.monde[new_row][new_col] = '\U0001f988'  # requin
+                        requin['row'] = new_row
+                        requin['col'] = new_col
                         deplacement_reussi = True
+                    elif self.monde[new_row][new_col] == '\U0001f4a7':  # eau
+                        self.monde[requin['row']][requin['col']] = '\U0001f4a7'  # eau
+                        self.monde[new_row][new_col] = '\U0001f988'  # requin
+                        requin['row'] = new_row
+                        requin['col'] = new_col
+                        deplacement_reussi = True
+                    if deplacement_reussi:
                         break
-            if not deplacement_reussi:
-               
-                return self.monde
-            
+
+        return self.monde
 
 
-# time.sleep(0.4)
   
 
 
@@ -92,26 +145,31 @@ class Planete:
 longueur = 10
 largeur = 8
 nombre_poissons = 10
-nombre_requins = 5
+nombre_requins = 2
 chronons = 0
 
 # création de l'instance de la classe Planete
-
-
 ma_planete = Planete(0, 0)
 
 # initialisation du monde
 ma_planete.creation_monde(longueur, largeur, nombre_poissons, nombre_requins)
 
+
 # affichage du monde
 ma_planete.affichage()
 
-#affiche les coordonnees des poissons et des requins
-# ma_planete.coordoonees_poissons_requins()
+# boucle temporel des chronons
 while chronons < 100:
     os.system('clear')
     ma_planete.deplacer_poissons()
+    ma_planete.deplacer_requins()
     ma_planete.affichage()
+
+# Affiche le chronon, le nombre de requins, le nombre initial de poissons et le nombre de poissons survivants
+    poissons_survivants = len(ma_planete.poissons)
+    print(f"Chronons en cours : {chronons}\nRequins : {nombre_requins}\nNombre initial de poissons : {nombre_poissons}\nPoissons survivants : {poissons_survivants}")
+
+          
     print()
     chronons += 1
-    time.sleep(0.4)
+    time.sleep(0.8)
