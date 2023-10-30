@@ -80,7 +80,7 @@ class Fish:
 
                 for requin in self.creation_monde.requins:
                     if abs(new_row - requin['row']) <= 1 and abs(new_col - requin['col']) <= 1:
-                        self.creation_monde[poisson['row']][poisson['col']] = '\U0001f4a7'  # le poisson est mangé
+                        self.creation_monde.poissons[poisson['row']][poisson['col']] = '\U0001f4a7'  # le poisson est mangé
                         poisson_mange = True
                         break
 
@@ -105,7 +105,7 @@ class Fish:
                 new_row = poisson['row'] + direction[0]
                 new_col = poisson['col'] + direction[1]
 
-                if 0 <= new_row < self.longueur and 0 <= new_col < self.largeur:
+                if 0 <= new_row < self.creation_monde.longueur and 0 <= new_col < self.creation_monde.largeur:
                     if self.creation_monde[new_row][new_col] == '\U0001f4a7':  # eau
                         self.creation_monde[poisson['row']][poisson['col']] = '\U0001f4a7'  # eau
                         self.creation_monde[new_row][new_col] = '\U0001f41f'  # poisson
