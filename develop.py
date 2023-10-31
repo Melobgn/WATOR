@@ -1,130 +1,136 @@
-import random
 import os
 import time
+import random
 
 
 class Monde:
-    def __init__(self):
-        self.poissons = []
-        self.requins = []
-        
-
-    def creer_le_monde(self, longueur, largeur):
+    def __init__(self, longueur, largeur):
         self.longueur = longueur
         self.largeur = largeur
-        self.monde = [['\U0001f4a7' for i in range(largeur)] for y in range(longueur)]
-        return self.monde
-        
+        self.monde = [['\U0001f4a7' for _ in range(largeur)] for _ in range(longueur)]
+        self.poissons = []
+        self.requins = []
+        self.temps_starvation = 8
 
     def affichage_monde(self):
-        for i in self.monde:
-            print(*i)
-    
-
-    def jouer_un_tour(self):
-        while chronons < 100:
-            os.system('clear')
-            chronons += 1
-            self.time.sleep= time.sleep()
-
+        for row in self.monde:
+            print(*row)
 
     def peupler_le_monde(self, nb_poissons, nb_requins):
         self.nb_poissons = nb_poissons
         self.nb_requins = nb_requins
         random.seed(12)
-        coordonnees_possibles = [(x, y) for x in range(self.longueur) for y in range(self.largeur)]
+        coordonnees_possibles = [(x, y) for x in range(self.largeur) for y in range(self.longueur)]
         random.shuffle(coordonnees_possibles)
-        
-        # Place les poissons dans la grille
-        for poisson in range(self.nb_poissons):
+
+        for _ in range(self.nb_poissons):
             if not coordonnees_possibles:
-                break  # Si on a utilisé toutes les coordonnées possibles, sortir de la boucle
-            row, col = coordonnees_possibles.pop()
-            self.monde[row][col] = '\U0001f420'
-            self.poissons.append({'row': row, 'col': col})
-        
-        # Place les requins dans la grille
-        for requin in range(self.nb_requins):
+                break
+            x, y = coordonnees_possibles.pop()
+            self.monde[x][y] = '\U0001f41f'
+            self.poissons.append(Poisson(self, x, y))
+
+        for _ in range(self.nb_requins):
             if not coordonnees_possibles:
-                break  # Si on a utilisé toutes les coordonnées possibles, sortir de la boucle
-            row, col = coordonnees_possibles.pop()
-            self.monde[row][col] = '\U0001f988'
-            self.requins.append({'row': row, 'col': col})
+                break
+            x, y = coordonnees_possibles.pop()
+            self.monde[x][y] = '\U0001f988'
+            self.requins.append((x, y))
 
 
-class Poisson(Monde):
-    def __init__(self, compteur_reproduction, temps_de_reproduction, x, y):
-        self.compteur_reproduction = compteur_reproduction
-        self.temps_de_reproduction = temps_de_reproduction
+class Poisson:
+    def __init__(self, monde, x, y):
+        self.monde = monde
         self.x = x
         self.y = y
 
-    
-    def cases_vides_adjacentes(self,grille):
-        self.grille = grille
+    def cases_vides_adjacentes(self, monde):
+        # ADJACENTE : qui se trouve dans le voisinage immédiat !!!
+        cases_adjacentes = []
+        # permet d'indiquer comment les poissons se déplacent : X(rangées ou lignes) = (0, 1) = bas, (0, -1) = haut, | Y(colonne) = (1, 0) = droite, (-1, 0) = à gauche
+        deplacement_possible = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+        # directions_possibles = deplacement_possible[:]
+        # condition
+        # random.shuffle(directions_possibles) # line 48 et 49 génère une direction aléatoire : (0, 1) ou (1, 0) ou (0, -1) ou (-1, 0)
 
+        for dx, dy in deplacement_possible: # pour chaque direction (direction x et direction y) dans 'directions_possibles'
+            new_x, new_y = (self.x + dx) % self.largeur, (self.y + dy) % self.longueur # nouvelle position x et nouvelle position y sont = à [position x actuelle + direction x] et [position y actuelle + direction y]
+            if self.monde.monde[new_x][new_y] == '\U0001f4a7': # '== eau'
+                cases_adjacentes.append((dx, dy))
 
-    def faire_un_tour(self, grille):
-        self.grille = grille
-        pass
+        return cases_adjacentes
+
+    def deplacer_poisson(self, x, y, direction):
+        new_x = x + direction[0]
+        new_y = y + direction[1]
+        self.monde.monde[x][y] = '\U0001f4a7' # '= eau'
+        self.monde.monde[new_x][new_y] = '\U0001f41f' # '= poisson'
+        return new_x, new_y
 
     def se_deplacer(self):
-        # permet de lister comment les poissons se déplacent : (0, 1) = bas, (1, 0) = droite, (0, -1) = haut, (-1, 0) = à gauche
-        deplacement_possible = [(0, 1), (1, 0), (0, -1), (-1, 0)]
-        for poisson in self.poissons: # permet à chaque élément 'poisson' de 'poissons = []' de se déplacer sur un position au hasard
-            directions_possibles = deplacement_possible[:]
-            random.shuffle(directions_possibles)
+        new_poissons = []
+        for x, y in self.monde.poissons:
+            cases_vides = self.cases_vides_adjacentes(x, y)
+            if cases_vides:
+                direction_choisie = random.choice(cases_vides)
+                new_x, new_y = self.deplacer_poisson(x, y, direction_choisie)
+                new_poissons.append((new_x, new_y))
+        self.monde.poissons = new_poissons
 
-            deplacement_reussi = False
-
-            for direction in directions_possibles: # pour chaque direction dans 'directions_possibles'
-                new_row = poisson['row'] + direction[0]
-                new_col = poisson['col'] + direction[1]
-                if 0 <= new_row < self.longueur and 0 <= new_col < self.largeur:
-                    if self.monde[new_row][new_col] == '\U0001f4a7':
-                        self.monde[poisson['row']][poisson['col']] = '\U0001f4a7'
-                        self.monde[new_row][new_col] = '\U0001f420'
-                        poisson['row'] = new_row
-                        poisson['col'] = new_col
-                        deplacement_reussi = True
-                        break
-
-            if not deplacement_reussi:
-                return self.monde
-            
-
-    def se_reproduire(self, grille, animal, y_target:int, x_target:int):
-        self.grille = grille
-        self.animal = animal
-        self.y_target = y_target
-        self.x_target = x_target
-        pass
 
 
 class Requin(Poisson):
-    def __init__(self, compteur_reproduction, temps_de_reproduction, x, y, energie) -> None:
-        super().__init__(compteur_reproduction, temps_de_reproduction, x, y)
+    def __init__(self, monde, energie):
+        super().__init__(monde)
         self.energie = energie
+        
 
-    def cases_poissons_adjacentes(self, monde):
-        self.monde = monde
-        pass
+    def cases_vides_adjacentes(self, x, y):
+        deplacement_possible = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+        directions_possibles = deplacement_possible[:]
+        random.shuffle(directions_possibles)
+        cases_vides = []
 
-    def cases_vides_ou_cases_poissons(self, monde):
-        self.monde = monde
-        pass
+        for dx, dy in directions_possibles:
+            new_x, new_y = x + dx, y + dy
+            if self.est_dans_le_monde(new_x, new_y) and self.monde.monde[new_x][new_y] == '\U0001f4a7':
+                cases_vides.append((dx, dy))
 
-    def faire_un_tour(self,monde):
-        self.monde = monde
-        pass
+        return cases_vides
 
-    def se_deplacer(self, monde, actions_possibles):
-        self.monde = monde
-        self.action_possibles = actions_possibles
-        pass
+    def deplacer_requin(self, x, y, direction):
+        new_x = x + direction[0]
+        new_y = y + direction[1]
+        self.monde.monde[x][y] = '\U0001f4a7'
+        self.monde.monde[new_x][new_y] = '\U0001f988'
+        return new_x, new_y
 
-mon_monde = Monde()
-mon_monde.creer_le_monde(10,8)
+    def est_dans_le_monde(self, x, y):
+        return 0 <= x < self.monde.largeur and 0 <= y < self.monde.longueur
+
+    def se_deplacer(self):
+        new_requins = []
+        for x, y in self.monde.requins:
+            cases_vides = self.cases_vides_adjacentes(x, y)
+            if cases_vides:
+                direction_choisie = random.choice(cases_vides)
+                new_x, new_y = self.deplacer_requin(x, y, direction_choisie)
+                new_requins.append((new_x, new_y))
+        self.monde.requins = new_requins
+
+chronons = 0
+mon_monde = Monde(10, 10)
+# deplacement_poisson = Poisson(mon_monde)
+# deplacement_requin = Requin(mon_monde, 2)
 mon_monde.peupler_le_monde(10,2)
-print(mon_monde.affichage_monde())
+mon_monde.affichage_monde()
 
+#Compteur chronons
+while chronons < 100:
+    os.system('clear')
+
+    # deplacement_requin.starvation()
+    mon_monde.affichage_monde()
+    print()
+    chronons += 1
+    time.sleep(0.8)
