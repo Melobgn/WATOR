@@ -10,6 +10,7 @@ class Monde():
         self.monde = [['\U0001f4a7' for i in range(largeur)] for y in range(longueur)]
         self.poissons = []
         self.requins = []
+        self.temps_starvation = 8
         
     def affichage_monde(self):
         for i in self.monde:
@@ -103,38 +104,86 @@ class Requin(Poisson):
         super().__init__(monde)
         self.energie = energie
 
-    def cases_vides_adjacentes(self):
-        return super().cases_vides_adjacentes()
-
     def se_deplacer(self):
-        return super().se_deplacer()
-
-    def choisir_direction(self, poisson):
-        return super().choisir_direction(poisson)
-        
-    def faire_un_tour(self,monde):
-        self.monde = monde
         for requin in self.monde.requins:
-            self.se_deplacer(requin)
-            self.energie -= 1  # Réduire l'énergie du requin après chaque tour
-    
+            self.cases_vides_adjacentes()
+            direction_choisie = self.choisir_direction(requin)
+
+            if direction_choisie:
+                self.deplacer_poisson(requin, direction_choisie)
+
+    def choisir_direction(self, requin):
+        for direction in self.directions_possibles:
+            new_row = requin['row'] + direction[0]
+            new_col = requin['col'] + direction[1]
+
+            if self.est_dans_le_monde(new_row, new_col):
+                if self.monde.monde[new_row][new_col] == '\U0001f4a7':  # eau
+                    return direction
+
+        return None
+
     def est_dans_le_monde(self, row, col):
-        return super().est_dans_le_monde(row, col)
+        return 0 <= row < self.monde.longueur and 0 <= col < self.monde.largeur
+
+    def deplacer_poisson(self, requin, direction):
+        new_row = requin['row'] + direction[0]
+        new_col = requin['col'] + direction[1]
+        self.monde.monde[requin['row']][requin['col']] = '\U0001f4a7'  # eau
+        self.monde.monde[new_row][new_col] = '\U0001f988' # requin
+        requin['row'] = new_row
+        requin['col'] = new_col
+
+    def kill(self, requin):
+        
+
+
+    def starvation(self):
+        starving = 0
+        for requin in self.monde.requins:
+            if starving == self.monde.temps_starvation:
+                self.kill()
+            else:
+                starving += 1
+
+    # def cases_vides_adjacentes(self):
+    #     return super().cases_vides_adjacentes()
+
+    # def se_deplacer(self):
+    #     return super().se_deplacer()
+
+    # def choisir_direction(self, poisson):
+    #     return super().choisir_direction(poisson)
+        
+    # def faire_un_tour(self,monde):
+    #     self.monde = monde
+    #     for requin in self.monde.requins:
+    #         self.se_deplacer(requin)
+    #         self.energie -= 1  # Réduire l'énergie du requin après chaque tour
     
-    def deplacer_poisson(self, poisson, direction):
-        return super().deplacer_poisson(poisson, direction)
+    # def est_dans_le_monde(self, row, col):
+    #     return super().est_dans_le_monde(row, col)
+    
+    # def deplacer_poisson(self, poisson, direction):
+    #     return super().deplacer_poisson(poisson, direction)
 
     
 
-
+chronons = 0
 mon_monde = Monde(10, 10)
+deplacement_poisson = Poisson(mon_monde)
+deplacement_requin = Requin(mon_monde, 2)
 mon_monde.peupler_le_monde(10,2)
 mon_monde.affichage_monde()
-deplacement_poisson = Poisson(mon_monde)
-deplacement_poisson.se_deplacer()
-print()
-mon_monde.affichage_monde()
-print()
-deplacement_requin = Requin(mon_monde, 2)
-deplacement_requin.se_deplacer()
-mon_monde.affichage_monde()
+
+#Compteur chronons
+while chronons < 100:
+    os.system('clear')
+    deplacement_poisson.se_deplacer()
+    deplacement_requin.se_deplacer()
+    deplacement_requin.starvation()
+    mon_monde.affichage_monde()
+    print()
+    chronons += 1
+    time.sleep(0.8)
+    
