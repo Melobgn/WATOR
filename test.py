@@ -73,8 +73,7 @@ class Planete:
             if not deplacement_reussi:
                
                 return self.monde
-           0000000000 
-
+           
 
 # time.sleep(0.4)
   

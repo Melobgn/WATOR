@@ -5,7 +5,6 @@ import time
 
 class Monde:
     def __init__(self):
-        
         self.poissons = []
         self.requins = []
         
@@ -41,7 +40,7 @@ class Monde:
             if not coordonnees_possibles:
                 break  # Si on a utilisé toutes les coordonnées possibles, sortir de la boucle
             row, col = coordonnees_possibles.pop()
-            self.monde[row][col] = '\U0001f41f'
+            self.monde[row][col] = '\U0001f420'
             self.poissons.append({'row': row, 'col': col})
         
         # Place les requins dans la grille
@@ -70,7 +69,7 @@ class Poisson(Monde):
         pass
 
     def se_deplacer(self):
-        # permet d'indiquer comment les poissons se déplacent : (0, 1) = bas, (1, 0) = droite, (0, -1) = haut, (-1, 0) = à gauche
+        # permet de lister comment les poissons se déplacent : (0, 1) = bas, (1, 0) = droite, (0, -1) = haut, (-1, 0) = à gauche
         deplacement_possible = [(0, 1), (1, 0), (0, -1), (-1, 0)]
         for poisson in self.poissons: # permet à chaque élément 'poisson' de 'poissons = []' de se déplacer sur un position au hasard
             directions_possibles = deplacement_possible[:]
@@ -84,7 +83,7 @@ class Poisson(Monde):
                 if 0 <= new_row < self.longueur and 0 <= new_col < self.largeur:
                     if self.monde[new_row][new_col] == '\U0001f4a7':
                         self.monde[poisson['row']][poisson['col']] = '\U0001f4a7'
-                        self.monde[new_row][new_col] = '\U0001f41f'
+                        self.monde[new_row][new_col] = '\U0001f420'
                         poisson['row'] = new_row
                         poisson['col'] = new_col
                         deplacement_reussi = True
