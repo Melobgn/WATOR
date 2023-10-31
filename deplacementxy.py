@@ -19,7 +19,7 @@ class Monde:
     def peupler_le_monde(self, nb_poissons, nb_requins):
         self.nb_poissons = nb_poissons
         self.nb_requins = nb_requins
-        random.seed(12)
+        # random.seed(12)
         coordonnees_possibles = [(x, y) for x in range(self.longueur) for y in range(self.hauteur)]
         random.shuffle(coordonnees_possibles)
 
@@ -44,11 +44,10 @@ class Poisson:
 
     def cases_vides_adjacentes(self, x, y):
         deplacement_possible = [(0, 1), (1, 0), (0, -1), (-1, 0)]
-        directions_possibles = deplacement_possible[:]
-        random.shuffle(directions_possibles)
+        random.shuffle(deplacement_possible)
         cases_vides = []
 
-        for dx, dy in directions_possibles:
+        for dx, dy in deplacement_possible:
             new_x, new_y = x + dx, y + dy
             if self.est_dans_le_monde(new_x, new_y) and self.monde.monde[new_x][new_y] == '\U0001f4a7':
                 cases_vides.append((dx, dy))
@@ -73,6 +72,9 @@ class Poisson:
                 direction_choisie = random.choice(cases_vides)
                 new_x, new_y = self.deplacer_poisson(x, y, direction_choisie)
                 new_poissons.append((new_x, new_y))
+            else:
+                return None
+
         self.monde.poissons = new_poissons
 
                 
@@ -113,6 +115,8 @@ class Requin(Poisson):
                 direction_choisie = random.choice(cases_vides)
                 new_x, new_y = self.deplacer_requin(x, y, direction_choisie)
                 new_requins.append((new_x, new_y))
+            else:
+                return None
         self.monde.requins = new_requins
 
 
@@ -135,7 +139,7 @@ class Requin(Poisson):
 
         for requin_x, requin_y in self.monde.requins:
             for poisson_x, poisson_y in self.monde.poissons:
-                if (abs(requin_x - poisson_x) <= 1 and abs(requin_y - poisson_y) <= 1):
+                if (abs(requin_x - poisson_x) <= 1 and abs(requin_y - poisson_y) == 0) or (abs(requin_x - poisson_x) == 0 and abs(requin_y - poisson_y) <= 1):
                     self.monde.monde[poisson_x][poisson_y] = '\U0001f4a7'
                     self.energie += 5
                     poissons_a_retirer.append((poisson_x, poisson_y))
@@ -154,7 +158,7 @@ chronons = 0
 mon_monde = Monde(10, 10)
 deplacement_poisson = Poisson(mon_monde)
 deplacement_requin = Requin(mon_monde)
-mon_monde.peupler_le_monde(10,3)
+mon_monde.peupler_le_monde(10,5)
 mon_monde.affichage_monde()
 
 #Compteur chronons
@@ -167,5 +171,5 @@ while chronons < 100:
     mon_monde.affichage_monde()
     print()
     chronons += 1
-    time.sleep(1)
+    time.sleep(0.8)
     
