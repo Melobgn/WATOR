@@ -1,130 +1,130 @@
-import random
+"""
+partie du Nouveau code du 01/11/2023
+effectué totalement seule et sans GPT
+Plutôt compris, reste encore beaucoup de chose à améliorer 
+Blocage à partir des boucles for dans méthode populate_world (line 45 et 53)
+ => suite dans develop.py
+
+"""
+
 import os
 import time
+import random
 
 
-class Monde:
-    def __init__(self):
-        self.poissons = []
-        self.requins = []
+class World:
+    def __init__(self, length, width, water_drop):
+        # je donne une notion de longueur(=length) et une largeur(=width) au monde
+        self.length = length
+        self.width = width
+        self.drops = water_drop
+        # je crée une matrice vide de taille length * width
+        self.world = [[self.drops for _ in range(width)] for _ in range(length)]
+        # je crée une liste de liste de requins et une liste de poissons
+        self.list_fishes = []
+        self.list_sharks = []
         
 
-    def creer_le_monde(self, longueur, largeur):
-        self.longueur = longueur
-        self.largeur = largeur
-        self.monde = [['\U0001f4a7' for i in range(largeur)] for y in range(longueur)]
-        return self.monde
-        
+    # je crée une fonction pour afficher le monde (=see the world) :
+    def see_world(self):
+        for row in self.world:
+            print(*row)
 
-    def affichage_monde(self):
-        for i in self.monde:
-            print(*i)
-    
+    """
+    À CE STADE LE CODE AFFICHE UNE MATRICE DE '0' AVEC UNE LARGEUR DE 10 ET UNE LONGUEUR DE 10
+    """
 
-    def jouer_un_tour(self):
-        while chronons < 100:
-            os.system('clear')
-            chronons += 1
-            self.time.sleep= time.sleep()
+# Puis on peuple le monde
+    def populate_world(self, nb_fishes, nb_sharks):
+        self.nb_fishes = nb_fishes
+        self.nb_sharks = nb_sharks
+        # CORRECTION : Pas placé au bon endroit (⇡) .voir:newcode
+        self.coord_possible = [(x, y) for x in range(self.width) for y in range(self.length)]
+        random.shuffle(self.coord_possible)
 
+        # ajouter les poissons
+        for _ in range(self.nb_fishes):
+            if not self.coord_possible:
+                break
+            x, y = self.coord_possible.pop()
+            self.world[x][y] = Fishes.__init__
+            self.list_fishes.append((x, y))
 
-    def peupler_le_monde(self, nb_poissons, nb_requins):
-        self.nb_poissons = nb_poissons
-        self.nb_requins = nb_requins
-        random.seed(12)
-        coordonnees_possibles = [(x, y) for x in range(self.longueur) for y in range(self.largeur)]
-        random.shuffle(coordonnees_possibles)
-        
-        # Place les poissons dans la grille
-        for poisson in range(self.nb_poissons):
-            if not coordonnees_possibles:
-                break  # Si on a utilisé toutes les coordonnées possibles, sortir de la boucle
-            row, col = coordonnees_possibles.pop()
-            self.monde[row][col] = '\U0001f420'
-            self.poissons.append({'row': row, 'col': col})
-        
-        # Place les requins dans la grille
-        for requin in range(self.nb_requins):
-            if not coordonnees_possibles:
-                break  # Si on a utilisé toutes les coordonnées possibles, sortir de la boucle
-            row, col = coordonnees_possibles.pop()
-            self.monde[row][col] = '\U0001f988'
-            self.requins.append({'row': row, 'col': col})
+        #  ajouter les requins
+        for _ in range(self.nb_sharks):
+            if not self.coord_possible:
+                break
+            x, y = self.coord_possible.pop()
+            self.world[x][y] = Fishes.__init__
+            self.list_sharks.append((x, y))
 
+#  CORRECTION : les deux identités déplacés dans leur classes respectives
+class Fishes(World):
+    # Création des poissons
+    def __init__(self, type_id, icons):
+        self.type_id = type_id
+        self.icons = icons
+        self.pos_fish = self.coord_possible
 
-class Poisson(Monde):
-    def __init__(self, compteur_reproduction, temps_de_reproduction, x, y):
-        self.compteur_reproduction = compteur_reproduction
-        self.temps_de_reproduction = temps_de_reproduction
-        self.x = x
-        self.y = y
-
-    
-    def cases_vides_adjacentes(self,grille):
-        self.grille = grille
+# REQUINS
+class Sharks(World):
+    # Créations requins :
+    def __init__(self, type_id, icons):
+        self.type_id = type_id
+        self.icons = icons
+        self.pos_shark = self.coord_possible
 
 
-    def faire_un_tour(self, grille):
-        self.grille = grille
-        pass
+# je donne des valeurs pour 'Monde.def _ _init_ _' et 'def see_world'
+my_world = World(10, 10, '\U0001f4a7') # donc :  'def __init__(self, length=10, wiconsth=10):'
+my_world.see_world()
+my_world.populate_world(10, 2)
 
-    def se_deplacer(self):
-        # permet d'indiquer comment les poissons se déplacent : (0, 1) = bas, (1, 0) = droite, (0, -1) = haut, (-1, 0) = à gauche
-        deplacement_possible = [(0, 1), (1, 0), (0, -1), (-1, 0)]
-        for poisson in self.poissons: # permet à chaque élément 'poisson' de 'poissons = []' de se déplacer sur un position au hasard
-            directions_possibles = deplacement_possible[:]
-            random.shuffle(directions_possibles)
+#  CORRECTION : déplacement dans la Word > 'init'
+my_fishes = Fishes(1, '\U0001f41f')
+my_sharks = Sharks(2, '\U0001f988') 
 
-            deplacement_reussi = False
+# N'arrive pas à afficher nombre de poissons et nombre de requins (à voir sur la fin)
+# my_world(f"Nombre de poissons : {}")
 
-            for direction in directions_possibles: # pour chaque direction dans 'directions_possibles'
-                new_row = poisson['row'] + direction[0]
-                new_col = poisson['col'] + direction[1]
-                if 0 <= new_row < self.longueur and 0 <= new_col < self.largeur:
-                    if self.monde[new_row][new_col] == '\U0001f4a7':
-                        self.monde[poisson['row']][poisson['col']] = '\U0001f4a7'
-                        self.monde[new_row][new_col] = '\U0001f420'
-                        poisson['row'] = new_row
-                        poisson['col'] = new_col
-                        deplacement_reussi = True
-                        break
+# Gestion du temps :
+chronons = 0
+while chronons < 100:
+    os.system('clear')
 
-            if not deplacement_reussi:
-                return self.monde
-            
-
-    def se_reproduire(self, grille, animal, y_target:int, x_target:int):
-        self.grille = grille
-        self.animal = animal
-        self.y_target = y_target
-        self.x_target = x_target
-        pass
+    # deplacement_requin.starvation()
+    my_world.see_world()
+    print(f"Nombre de tour(s) : {chronons}")
+    print()
+    chronons += 1
+    time.sleep(0.8)
 
 
-class Requin(Poisson):
-    def __init__(self, compteur_reproduction, temps_de_reproduction, x, y, energie) -> None:
-        super().__init__(compteur_reproduction, temps_de_reproduction, x, y)
-        self.energie = energie
 
-    def cases_poissons_adjacentes(self, monde):
-        self.monde = monde
-        pass
 
-    def cases_vides_ou_cases_poissons(self, monde):
-        self.monde = monde
-        pass
 
-    def faire_un_tour(self,monde):
-        self.monde = monde
-        pass
+#  structure classe mise de côté pour plus tard 
 
-    def se_deplacer(self, monde, actions_possibles):
-        self.monde = monde
-        self.action_possibles = actions_possibles
-        pass
 
-mon_monde = Monde()
-mon_monde.creer_le_monde(10,8)
-mon_monde.peupler_le_monde(10,2)
-print(mon_monde.affichage_monde())
+#     def adjacentes_cells(self, monde):
+#         pass
+#         # # ADJACENTE : qui se trouve dans le voisinage immédiat !!!
+#         # cases_adjacentes = []
+#         # # permet d'indiquer comment les poissons se déplacent : X(rangées ou lignes) = (0, 1) = bas, (0, -1) = haut, | Y(colonne) = (1, 0) = droite, (-1, 0) = à gauche
+#         # deplacement_possible = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+#         # # directions_possibles = deplacement_possible[:]
+#         # # condition
+#         # # random.shuffle(directions_possibles) # line 48 et 49 génère une direction aléatoire : (0, 1) ou (1, 0) ou (0, -1) ou (-1, 0)
 
+#         # for dx, dy in deplacement_possible: # pour chaque direction (direction x et direction y) dans 'directions_possibles'
+#         #     new_x, new_y = (self.x + dx) % self.largeur, (self.y + dy) % self.longueur # nouvelle position x et nouvelle position y sont = à [position x actuelle + direction x] et [position y actuelle + direction y]
+#         #     if self.monde.monde[new_x][new_y] == '\U0001f4a7': # '== eau'
+#         #         cases_adjacentes.append((dx, dy))
+
+#         # return cases_adjacentes
+
+#     def move_fishes(self):
+#         pass
+
+#     def reproduct_fishes(self):
+#         pass
