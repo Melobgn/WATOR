@@ -11,7 +11,7 @@ largeur_fenetre = 800
 hauteur_fenetre = 600
 
 fenetre = pygame.display.set_mode((largeur_fenetre, hauteur_fenetre))
-fond = pygame.image.load("image/background_wator.png").convert()
+
 pygame.display.set_caption("Simulation Wa-Tor")
 
 # Défini la couleur de fond
