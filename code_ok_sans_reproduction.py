@@ -140,7 +140,7 @@ print()
 
 #Compteur chronons
 while chronons < 50:
-    #os.system('cls')
+    os.system('cls')
 
     # Faites se déplacer chaque poisson
     for poiscaille in mon_monde.poissons:
@@ -161,5 +161,5 @@ while chronons < 50:
     mon_monde.affichage_monde()
     print()
     chronons += 1
-    time.sleep(4)
+    time.sleep(1)
     
