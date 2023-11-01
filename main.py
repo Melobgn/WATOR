@@ -5,7 +5,7 @@ from simulation import Monde, Poisson, Requin
 pygame.init()
 
 # Création de la fenêtre
-mon_monde = Monde(10, 10, 50)  # Ajustez les dimensions du monde ici
+mon_monde = Monde(12, 12, 50)  # Ajustez les dimensions du monde ici
 longueur = mon_monde.longueur * mon_monde.taille_cellule
 hauteur = mon_monde.hauteur * mon_monde.taille_cellule
 
@@ -23,9 +23,9 @@ image_requin = pygame.transform.scale(image_requin, (mon_monde.taille_cellule, m
 
 
 # Couleur du fond
-couleur_fond = (255, 255, 255)
+couleur_fond = (0, 127, 255)
 
-mon_monde.peupler_le_monde(10, 2)
+mon_monde.peupler_le_monde(20, 4)
 
 poisson = Poisson(mon_monde)  
 requin = Requin(mon_monde)    

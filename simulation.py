@@ -78,7 +78,7 @@ class Poisson:
 class Requin(Poisson):
     def __init__(self, monde):
         super().__init__(monde)
-        self.energie = 20
+        self.energie = 15
 
     def deplacer_requin(self, x, y, direction):
         new_x = x + direction[0]
