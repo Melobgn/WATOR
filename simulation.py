@@ -45,7 +45,7 @@ class Poisson:
         self.monde = monde
         self.x = x
         self.y = y
-        self.temps_de_reproduction = 8
+        self.temps_de_reproduction = 2
         self.gestation = 0
 
     def cases_vides_adjacentes(self):
@@ -81,6 +81,7 @@ class Poisson:
                 self.x, self.y = new_x, new_y
                 self.gestation += 1
 
+
     def reproduction(self):
         poisson_bebe = Poisson(self.monde, self.x, self.y)
         self.monde.poissons.append(poisson_bebe)
@@ -90,8 +91,8 @@ class Poisson:
 class Requin(Poisson):
     def __init__(self, monde, x, y):
         super().__init__(monde, x, y)
-        self.energie = 6
-        self.temps_de_reproduction = 11
+        self.energie = 10
+        self.temps_de_reproduction = 20
         self.gestation = 0
 
 
@@ -155,7 +156,7 @@ class Requin(Poisson):
         for poiscaille in self.monde.poissons:
             if (abs(self.x - poiscaille.x) <= 1 and abs(self.y - poiscaille.y) == 0) or (abs(self.x - poiscaille.x) == 0 and abs(self.y - poiscaille.y) <= 1):
                 self.monde.grille[poiscaille.x][poiscaille.y] = 0
-                self.energie += 2
+                self.energie += 1
                 self.monde.poissons.remove(poiscaille)
 
     def reproduction_requin(self):
