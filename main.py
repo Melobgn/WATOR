@@ -5,7 +5,7 @@ import sys
 def main():
     pygame.init()
 
-    simulation = Simulation(12, 12, 50, 20, 4, 800)
+    simulation = Simulation(15, 15, 20, 2, 800, 50)
     simulation.initialiser()
 
     running = True
