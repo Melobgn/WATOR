@@ -1,4 +1,5 @@
 import random
+import pygame
 
 class Monde:
     def __init__(self, longueur, hauteur, taille_cellule):
@@ -153,3 +154,92 @@ class Requin(Poisson):
             else:
                 self.gestation += 1
         self.monde.poissons.extend(poissons_a_ajouter)
+
+
+    
+class Simulation:
+    def __init__(self, longueur, hauteur, taille_cellule, nb_poissons, nb_requins, delai_chronon):
+        self.monde = Monde(longueur, hauteur, taille_cellule)
+        self.poisson = Poisson(self.monde)
+        self.requin = Requin(self.monde)
+        self.chronons = 0
+        self.duree_chronon = delai_chronon
+        self.en_cours = True
+        self.nb_poissons = nb_poissons
+        self.nb_requins = nb_requins
+
+    def initialiser(self):
+        # Initialisation de Pygame
+        pygame.init()
+        longueur = self.monde.longueur * self.monde.taille_cellule
+        hauteur = self.monde.hauteur * self.monde.taille_cellule
+        ecran = pygame.display.set_mode((longueur, hauteur + 80))
+        pygame.display.set_caption("Projet Wa_tor")
+
+        # chargement des images
+        image_poisson = pygame.image.load("fish.png").convert_alpha()
+        image_requin = pygame.image.load("shark.png").convert_alpha()
+
+        # Redimensionnement des images
+        image_poisson = pygame.transform.scale(image_poisson, (self.monde.taille_cellule, self.monde.taille_cellule))
+        image_requin = pygame.transform.scale(image_requin, (self.monde.taille_cellule, self.monde.taille_cellule))
+        couleur_fond = (0,127,255)
+        self.monde.peupler_le_monde(self.nb_poissons, self.nb_requins)
+        running = True
+        font = pygame.font.Font(None, 25)
+
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.terminer_simulation()
+            ecran.fill((255,255,255))
+            self.poisson.se_deplacer()
+            self.requin.se_deplacer()
+            self.requin.starvation()
+            self.requin.manger_poisson()
+
+            for i in range (self.monde.hauteur):
+                for j in range(self.monde.longueur):
+                    cellule = self.monde.get_cell(j,i)
+                    x = j * self.monde.taille_cellule
+                    y = i * self.monde.taille_cellule
+                    pygame.draw.rect(ecran, couleur_fond, (x,y, self.monde.taille_cellule, self.monde.taille_cellule))
+                    if cellule == '\U0001f41f':
+                        ecran.blit(image_poisson, (x, y))
+                    elif cellule == '\U0001f988':
+                        ecran.blit(image_requin, (x, y))
+            texte_chronons = font.render(f"Chronons: {self.chronons}", True, (0, 0, 0))
+            texte_requins = font.render(f"Requins: {len(self.monde.requins)}", True, (0, 0, 0))
+            texte_poissons = font.render(f"Poissons: {len(self.monde.poissons)}", True, (0, 0, 0))
+            ecran.blit(texte_chronons, (10, hauteur + 10))
+            ecran.blit(texte_requins, (10, hauteur + 40))
+            ecran.blit(texte_poissons, (10, hauteur + 60))
+            pygame.display.flip()
+            self.chronons += 1
+            pygame.time.delay(self.duree_chronon)
+
+    def gerer_evenements(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.terminer_simulation()
+
+    def mise_a_jour(self):
+        self.poisson.se_deplacer()
+        self.requin.se_deplacer()
+        self.requin.starvation()
+        self.requin.manger_poisson()
+        self.chronons += 1
+        pygame.time.delay(self.duree_chronon)
+
+    def afficher(self):
+        pass
+
+    def en_cours(self):
+        return self.en_cours
+
+    def terminer_simulation(self):
+        self.en_cours = False
+        pygame.quit()
+
+
+   
