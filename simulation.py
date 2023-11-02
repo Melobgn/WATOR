@@ -1,5 +1,6 @@
 import random
 import pygame
+import matplotlib.pyplot as plt
 
 class Monde:
     def __init__(self, longueur, hauteur, taille_cellule):
@@ -168,6 +169,11 @@ class Simulation:
         self.nb_poissons = nb_poissons
         self.nb_requins = nb_requins
 
+        # initialisation des données pour le graphique
+        self.temps = [0]
+        self.nb_poissons_data = [self.nb_poissons]
+        self.nb_requins_data = [self.nb_requins]
+
     def initialiser(self):
         # Initialisation de Pygame
         pygame.init()
@@ -185,8 +191,23 @@ class Simulation:
         image_requin = pygame.transform.scale(image_requin, (self.monde.taille_cellule, self.monde.taille_cellule))
         couleur_fond = (0,127,255)
         self.monde.peupler_le_monde(self.nb_poissons, self.nb_requins)
+
         running = True
         font = pygame.font.Font(None, 25)
+
+         # Initialisation du graphique
+        plt.ion()
+        fig, ax = plt.subplots()
+        ax.set_title("Évolution du nombre de poissons et de requins")
+        ax.set_xlabel("Temps")
+        ax.set_ylabel("Nombre")
+
+        poissons_line, = ax.plot(self.temps, self.nb_poissons_data, label="Poissons")
+        requins_line, = ax.plot(self.temps, self.nb_requins_data, label="Requins")
+
+        ax.legend(loc="upper left")
+
+        plt.show()
 
         while running:
             for event in pygame.event.get():
@@ -198,12 +219,12 @@ class Simulation:
             self.requin.starvation()
             self.requin.manger_poisson()
 
-            for i in range (self.monde.hauteur):
+            for i in range(self.monde.hauteur):
                 for j in range(self.monde.longueur):
-                    cellule = self.monde.get_cell(j,i)
+                    cellule = self.monde.get_cell(j, i)
                     x = j * self.monde.taille_cellule
                     y = i * self.monde.taille_cellule
-                    pygame.draw.rect(ecran, couleur_fond, (x,y, self.monde.taille_cellule, self.monde.taille_cellule))
+                    pygame.draw.rect(ecran, couleur_fond, (x, y, self.monde.taille_cellule, self.monde.taille_cellule))
                     if cellule == '\U0001f41f':
                         ecran.blit(image_poisson, (x, y))
                     elif cellule == '\U0001f988':
@@ -217,6 +238,25 @@ class Simulation:
             pygame.display.flip()
             self.chronons += 1
             pygame.time.delay(self.duree_chronon)
+
+            self.temps.append(self.chronons)
+            self.nb_poissons_data.append(len(self.monde.poissons))
+            self.nb_requins_data.append(len(self.monde.requins))
+
+            # Mettre à jour le graphique en temps réel
+            poissons_line.set_data(self.temps, self.nb_poissons_data)
+            requins_line.set_data(self.temps, self.nb_requins_data)
+
+            ax.relim()
+            ax.autoscale_view()
+
+            plt.pause(0.01)  # Pause pour rafraîchir le graphique
+            plt.draw()  # Rafraîchir le graphique
+
+            pygame.display.flip()
+            self.chronons += 1
+            pygame.time.delay(self.duree_chronon)
+
 
     def gerer_evenements(self):
         for event in pygame.event.get():
