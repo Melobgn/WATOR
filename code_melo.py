@@ -1,6 +1,7 @@
-import os
-import time
 import random
+import pygame
+import matplotlib.pyplot as plt
+
 
 
 class Monde:
@@ -81,7 +82,6 @@ class Poisson:
                 self.gestation += 1
 
     def reproduction(self):
-        #print("Reproduction called for fish at ({}, {})".format(self.x, self.y))  # Ajoutez cette ligne pour le débogage
         poisson_bebe = Poisson(self.monde, self.x, self.y)
         self.monde.poissons.append(poisson_bebe)
         self.monde.grille[self.x][self.y] = '\U0001f41f'
@@ -90,17 +90,36 @@ class Poisson:
 class Requin(Poisson):
     def __init__(self, monde, x, y):
         super().__init__(monde, x, y)
-        self.energie = 12
-        self.temps_de_reproduction = 15
+        self.energie = 6
+        self.temps_de_reproduction = 11
         self.gestation = 0
 
 
     def deplacer_requin(self):
-        poisson_proche = None
         cases_vides = self.cases_vides_adjacentes()
         if not cases_vides:
             self.gestation += 1
             return
+        elif cases_vides:
+            self.cases_poissons_miam()
+        if not self.cases_poissons_miam():
+            if cases_vides:
+            # Si aucun poisson proche, se déplacer vers une case vide aléatoire
+                direction_choisie = random.choice(cases_vides)
+                dx, dy = direction_choisie
+                new_x = (self.x + dx) % self.monde.longueur
+                new_y = (self.y + dy) % self.monde.hauteur
+                if self.gestation >= self.temps_de_reproduction:
+                    self.reproduction_requin()
+                    self.gestation = 0
+                else:
+                    self.monde.grille[self.x][self.y] = 0
+                    self.monde.grille[new_x][new_y] = '\U0001f988'
+                    self.x, self.y = new_x, new_y
+                    self.gestation += 1
+        
+    def cases_poissons_miam(self):
+        poisson_proche = None
         for poiscaille in self.monde.poissons:
             if abs(self.x - poiscaille.x) <= 1 and abs(self.y - poiscaille.y) <= 1:
                 poisson_proche = poiscaille
@@ -114,21 +133,6 @@ class Requin(Poisson):
                 new_x, new_y = self.x, self.y + 1
             else:
                 new_x, new_y = self.x, self.y - 1
-            if self.gestation >= self.temps_de_reproduction:
-                self.reproduction_requin()
-                self.gestation = 0
-            else:
-                self.monde.grille[self.x][self.y] = 0
-                self.monde.grille[new_x][new_y] = '\U0001f988'
-                self.x, self.y = new_x, new_y
-                self.gestation += 1
-
-        elif cases_vides:
-            # Si aucun poisson proche, se déplacer vers une case vide aléatoire
-            direction_choisie = random.choice(cases_vides)
-            dx, dy = direction_choisie
-            new_x = (self.x + dx) % self.monde.longueur
-            new_y = (self.y + dy) % self.monde.hauteur
             if self.gestation >= self.temps_de_reproduction:
                 self.reproduction_requin()
                 self.gestation = 0
@@ -159,36 +163,139 @@ class Requin(Poisson):
         self.monde.requins.append(requin_bebe)
         self.monde.grille[self.x][self.y] = '\U0001f988'
  
+class Simulation:
+    def __init__(self, longueur, hauteur, nb_poissons, nb_requins, delai_chronon, taille_cellule):
+        self.monde = Monde(longueur, hauteur)
+        self.chronons = 0
+        self.duree_chronon = delai_chronon
+        self.en_cours = True
+        self.nb_poissons = nb_poissons
+        self.nb_requins = nb_requins
+        self.taille_cellule = taille_cellule  # Nouvel attribut pour la taille des cellules
 
-chronons = 0
-mon_monde = Monde(10, 10)
-poissons = mon_monde.poissons
-requins = mon_monde.requins
-mon_monde.peupler_le_monde(8,2)
-mon_monde.affichage_monde()
-print()
+        # Initialisation des données pour le graphique
+        self.temps = [0]
+        self.nb_poissons_data = [self.nb_poissons]
+        self.nb_requins_data = [self.nb_requins]
 
-#Compteur chronons
-while chronons < 50:
-    os.system('cls')
+    def initialiser(self):
+        # Initialisation de Pygame
+        pygame.init()
+        longueur = self.monde.longueur * self.taille_cellule  # Calcul de la taille de l'écran en fonction des cellules
+        hauteur = self.monde.hauteur * self.taille_cellule  # Calcul de la taille de l'écran en fonction des cellules
+        ecran = pygame.display.set_mode((longueur, hauteur + 80))
+        pygame.display.set_caption("Projet Wa_tor")
 
-    # Faites se déplacer chaque poisson
-    for poiscaille in mon_monde.poissons:
-        poiscaille.deplacer_poisson()
+        # Chargement des images
+        image_poisson = pygame.image.load("fish.png").convert_alpha()
+        image_requin = pygame.image.load("shark.png").convert_alpha()
 
-    # Faites se déplacer chaque requin
-    for requinx in mon_monde.requins:
-        requinx.deplacer_requin()
-        requinx.manger_poisson()
-        requinx.starvation()
+        # Redimensionnement des images en fonction de la taille de la cellule
+        image_poisson = pygame.transform.scale(image_poisson, (self.taille_cellule, self.taille_cellule))
+        image_requin = pygame.transform.scale(image_requin, (self.taille_cellule, self.taille_cellule))
+        couleur_fond = (0, 127, 255)
+        self.monde.peupler_le_monde(self.nb_poissons, self.nb_requins)
 
-    for poiscaille in mon_monde.poissons:
-        mon_monde.grille[poiscaille.x][poiscaille.y] = '\U0001f41f'
+        running = True
+        font = pygame.font.Font(None, 25)
 
-    for requinx in mon_monde.requins:
-        mon_monde.grille[requinx.x][requinx.y] = '\U0001f988'
+        # Initialisation du graphique
+        plt.ion()
+        fig, ax = plt.subplots()
+        ax.set_title("Évolution du nombre de poissons et de requins")
+        ax.set_xlabel("Temps")
+        ax.set_ylabel("Nombre")
 
-    mon_monde.affichage_monde()
-    print()
-    chronons += 1
-    time.sleep(1)
+        poissons_line, = ax.plot(self.temps, self.nb_poissons_data, label="Poissons")
+        requins_line, = ax.plot(self.temps, self.nb_requins_data, label="Requins")
+
+        ax.legend(loc="upper left")
+
+        plt.show()
+
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.terminer_simulation()
+            ecran.fill((255, 255, 255))
+
+            # Appel des méthodes de déplacement et d'interaction des poissons et requins
+            for poiscaille in self.monde.poissons:
+                poiscaille.deplacer_poisson()
+            for requinx in self.monde.requins:
+                requinx.deplacer_requin()
+                requinx.starvation()
+                requinx.manger_poisson()
+            for poiscaille in self.monde.poissons:
+                self.monde.grille[poiscaille.x][poiscaille.y] = '\U0001f41f' #poisson
+
+            for requinx in self.monde.requins:
+                self.monde.grille[requinx.x][requinx.y] = '\U0001f988' #requin
+
+            # Dessin des cellules
+            for i in range(self.monde.hauteur):
+                for j in range(self.monde.longueur):
+                    cellule = self.monde.grille[i][j]
+                    x = j * self.taille_cellule
+                    y = i * self.taille_cellule
+                    pygame.draw.rect(ecran, couleur_fond, (x, y, self.taille_cellule, self.taille_cellule))
+                    if cellule == '\U0001f41f':
+                        ecran.blit(image_poisson, (x, y))
+                    elif cellule == '\U0001f988':
+                        ecran.blit(image_requin, (x, y))
+
+            # Affichage des informations
+            texte_chronons = font.render(f"Chronons: {self.chronons}", True, (0, 0, 0))
+            texte_requins = font.render(f"Requins: {len(self.monde.requins)}", True, (0, 0, 0))
+            texte_poissons = font.render(f"Poissons: {len(self.monde.poissons)}", True, (0, 0, 0))
+            ecran.blit(texte_chronons, (10, hauteur + 10))
+            ecran.blit(texte_requins, (10, hauteur + 40))
+            ecran.blit(texte_poissons, (10, hauteur + 60))
+            pygame.display.flip()
+            self.chronons += 1
+            pygame.time.delay(self.duree_chronon)
+
+            # Mise à jour des données du graphique
+            self.temps.append(self.chronons)
+            self.nb_poissons_data.append(len(self.monde.poissons))
+            self.nb_requins_data.append(len(self.monde.requins))
+
+            # Mise à jour du graphique en temps réel
+            poissons_line.set_data(self.temps, self.nb_poissons_data)
+            requins_line.set_data(self.temps, self.nb_requins_data)
+
+            ax.relim()
+            ax.autoscale_view()
+
+            plt.pause(0.01)
+            plt.draw()
+
+            pygame.display.flip()
+            self.chronons += 1
+            pygame.time.delay(self.duree_chronon)
+
+    def gerer_evenements(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.terminer_simulation()
+
+    def mise_a_jour(self):
+        self.poisson.se_deplacer()
+        self.requin.starvation()
+        self.requin.se_deplacer()
+        self.requin.manger_poisson()
+        self.chronons += 1
+        pygame.time.delay(self.duree_chronon)
+
+    def afficher(self):
+        pass
+
+    def en_cours(self):
+        return self.en_cours
+
+    def terminer_simulation(self):
+        self.en_cours = False
+        pygame.quit()
+
+
+   
