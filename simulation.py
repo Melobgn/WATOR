@@ -5,11 +5,11 @@ import pygame
 import matplotlib.pyplot as plt
 
 class World:
-    def __init__(self, length, width):
+    def __init__(self, length, height):
         self.length = length
-        self.width = width
+        self.height = height
         self.water_drop = 0
-        self.world_map = [[self.water_drop for _ in range(width)] for _ in range(length)]
+        self.world_map = [[self.water_drop for _ in range(length)] for _ in range(height)]
         self.list_fishes = []
         self.list_sharks = []
 
@@ -20,7 +20,7 @@ class World:
         print(f"Requins : {len(self.list_sharks)}")
 
     def populate(self, nb_fishes, nb_sharks):
-        coord_possible = [(x, y) for x in range(self.width) for y in range(self.length)]
+        coord_possible = [(x, y) for x in range(self.length) for y in range(self.height)]
         random.shuffle(coord_possible)
 
         for _ in range(nb_fishes):  # Utiliser nb_fishes au lieu de self.nb_fishes
@@ -62,15 +62,17 @@ class Fish:
         self.gestation_time = 10
 
     def adjacent_empty_cells(self):
-        adjacent_empty_cells = []
+        
         list_travel_possible = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        random.shuffle(list_travel_possible)
+        empty_cells = []
 
         for dx, dy in list_travel_possible:
-            new_x, new_y = (self.x + dx) % self.world.width, (self.y + dy) % self.world.length
+            new_x, new_y = (self.x + dx) % self.world.length, (self.y + dy) % self.world.height
             if self.world.world_map[new_x][new_y] == 0:
-                adjacent_empty_cells.append((new_x, new_y))
+                empty_cells.append((dx, dy))
 
-        return adjacent_empty_cells
+        return empty_cells
 
     def move_prey(self):
         empty_cells = self.adjacent_empty_cells()
@@ -78,10 +80,9 @@ class Fish:
             self.gestation += 1
             return
         else:
-            direction = random.choice(empty_cells)
-            dx, dy = direction
+            dx, dy = random.choice(empty_cells)
             new_x = (self.x + dx) % self.world.length
-            new_y = (self.y + dy) % self.world.width
+            new_y = (self.y + dy) % self.world.height
             if self.gestation >= self.gestation_time:
                 self.reproduct_prey()
                 self.gestation = 0
@@ -111,10 +112,10 @@ class Shark(Fish):
             return
         else:
             if not self.following_prey():
-                direction = random.choice(empty_cells)
-                dx, dy = direction
+                
+                dx, dy = random.choice(empty_cells)
                 new_x = (self.x + dx) % self.world.length
-                new_y = (self.y + dy) % self.world.width
+                new_y = (self.y + dy) % self.world.height
                 if self.gestation >= self.gestation_time:
                     self.reproduct_sharks()
                     self.gestation = 0
@@ -166,9 +167,10 @@ class Shark(Fish):
                 self.energy += 3
                 self.world.list_fishes.remove(fish)
 
+
 class Simulation:
-    def __init__(self, length, width, nb_fishes, nb_sharks, delay_chronon, cell_size):
-        self.world = World(length, width)
+    def __init__(self, length, height, nb_fishes, nb_sharks, delay_chronon, cell_size):
+        self.world = World(length, height)
         self.chronons = 0
         self.delay_chronon = delay_chronon
         self.on = True
@@ -182,9 +184,9 @@ class Simulation:
 
     def initialisation(self):
         pygame.init()
-        width = self.world.width * self.cell_size
         length = self.world.length * self.cell_size
-        screen = pygame.display.set_mode((width, length + 80))
+        height = self.world.height * self.cell_size
+        screen = pygame.display.set_mode((length, height + 80))
         pygame.display.set_caption("Projet Wa_tor")
 
         fish_picture = pygame.image.load("fish.png").convert_alpha()
@@ -229,8 +231,8 @@ class Simulation:
             for shark in self.world.list_sharks:
                 self.world.world_map[shark.x][shark.y] = '\U0001f988'
 
-            for i in range(self.world.length):
-                for j in range(self.world.width):
+            for i in range(self.world.height):
+                for j in range(self.world.length):
                     cell = self.world.world_map[i][j]
                     x = j * self.cell_size
                     y = i * self.cell_size
@@ -243,11 +245,11 @@ class Simulation:
             text_chronons = font.render(f"Chronons: {self.chronons}", True, (0, 0, 0))
             shark_txt = font.render(f"Sharks: {len(self.world.list_sharks)}", True, (0, 0, 0))
             fish_txt = font.render(f"Fishes: {len(self.world.list_fishes)}", True, (0, 0, 0))
-            screen.blit(text_chronons, (10, length + 10))
-            screen.blit(shark_txt, (10, length + 40))
-            screen.blit(fish_txt, (10, length + 60))
+            screen.blit(text_chronons, (10, height + 10))
+            screen.blit(shark_txt, (10, height + 40))
+            screen.blit(fish_txt, (10, height + 60))
             pygame.display.flip()
-            self.chronons += 1
+            #self.chronons += 1
             pygame.time.delay(self.delay_chronon)
 
             self.time.append(self.chronons)
@@ -275,4 +277,3 @@ class Simulation:
     def ending_simulation(self):
         self.on = False
         pygame.quit()
-
