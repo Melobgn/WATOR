@@ -1,172 +1,367 @@
-"""
-Nouveau code : recommencer de zéro le 01/11/2023 pour comprendre l'ensemble du code et son fonctionnement 
-Partie final effectué avec l'aide de Vincent pour la partie déplacement des créatures
-
-"""
-
 import os
 import time
 import random
+import pygame
+import matplotlib.pyplot as plt
+
+
 
 
 class World:
-    def __init__(self, length, width, water_drop):
+    def __init__(self, length, width ):
         # je donne une notion de longueur(=length) et une largeur(=width) au monde
         self.length = length
         self.width = width
-        self.drops = water_drop
+        self.water_drop = 0
         # je crée une matrice vide de taille length * width
-        self.world_map = [[None for _ in range(width)] for _ in range(length)]
-        # je crée la liste des coordonnées possibles que je j'aléatoirise
-        self.coord_possible = [(x, y) for x in range(self.width) for y in range(self.length)]
-        random.shuffle(self.coord_possible)
+        self.world_map = [[self.water_drop for _ in range(width)] for _ in range(length)]
+        
         # je crée une liste de liste de requins et une liste de poissons
         self.list_fishes = []
         self.list_sharks = []
-        # pour donner à World l'accès aux composants de fish et shark
-        self.my_fishes = Fishes(1, '\U0001f420')
-        self.my_sharks = Sharks(2, '\U0001f988') 
-        
 
-    # je crée une fonction pour afficher le monde (=see_the_world)
+     # je crée une fonction pour afficher le monde (=see_the_world)
     def see_world(self):
         for row in self.world_map:
             print(*row)
+        print(f"Poissons : {len(self.list_fishes)}")
+        print(f"Requins : {len(self.list_sharks)}")
 
-    """
-    À CE STADE LE CODE AFFICHE UNE MATRICE DE 'icônes gouttes' AVEC UNE LARGEUR DE 10 ET UNE LONGUEUR DE 10
-    """
 
-# On peuple le monde
-    def populate_world(self, nb_fishes, nb_sharks):
-        self.nb_fishes = nb_fishes
-        self.nb_sharks = nb_sharks
+    # On peuple le monde
+    def populate(self, nb_fishes, nb_sharks):
         
-        for pos in self.coord_possible:
-            self.world_map[pos[0]][pos[1]] = self.drops
+        # je crée la liste des coordonnées possibles que je j'aléatoirise
+        coord_possible = [(x, y) for x in range(self.width) for y in range(self.length)]
+        random.shuffle(coord_possible)
+        
+       
 
         # ajouter les poissons
         for _ in range(self.nb_fishes):
-            if not self.coord_possible:
+            if not coord_possible:
                 break
-            x, y = self.coord_possible.pop()
-            self.world_map[x][y] = self.my_fishes.return_icons_fish() # utiliser une fonction pour récupérer l'icône
-            self.list_fishes.append((x, y))
+            x, y = coord_possible.pop()
+            fish = Fish(self, x, y)
+            self.world_map[x][y] = fish.icons_fish # utiliser une fonction pour récupérer l'icône
+            self.list_fishes.append(fish)
 
         #  ajouter les requins
         for _ in range(self.nb_sharks):
-            if not self.coord_possible:
+            if not coord_possible:
                 break
-            x, y = self.coord_possible.pop()
-            self.world_map[x][y] = self.my_sharks.icons_shark # accéder à l'icône directement (attribut public)
-            self.list_sharks.append((x, y))
+            x, y = coord_possible.pop()
+            shark = Shark(self, x, y)
+            self.world_map[x][y] = shark.icons_shark # accéder à l'icône directement (attribut public)
+            self.list_sharks.append(shark)
 
     """
     À CE STADE LE CODE AFFICHE UNE MATRICE DE 'gouttes' AVEC LES POISSONS ET LES REQUINS FIGÉS (icônes)
     """
+     # a mettre dans la classe simulation
+    def play_a_round(self):
+        for fish in self.list_fishes: # pour chaque 'poisson' dans la liste poisson
+            fish.move_prey() 
+        for shark in self.list_sharks:
+            shark.starvation()
+            shark.move_carnivore()
+            shark.eat_prey()
+        for fish in self.list_fishes:
+            self.world_map[fish.x][fish.y] = fish.icons_fish 
+        for shark in self.list_sharks:
+            self.world_map[shark.x][shark.y] = shark.icons_shark 
+        
+             
 
-# on crée une méthode pour récupérer les cases disponibles pour le déplacements futurs des poissons, ainsi que les requins plus tard
-    def adjacentes_empty_cells(self, entity_pos_x, entity_pos_y):
-        list_adjacentes_cells = [] # permet de lister les poissons pourront se déplacer : X(rangées ou lignes) = (0, 1) = bas et (0, -1) = haut, | Y(colonne) = (1, 0) = droite et (-1, 0) = à gauche
-        list_travel_possible = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+# TODO : Consignes Jérémy
+# 1. faire une boucle sur les poissons et sur les requins qui sont dans les listes
+# 2. appliquer la méthode pour les faire se déplacer => Pas dans cette méthodes mais dans move_fish et sharks !!
+    # /!\ convention! = attention ne pas mettre le nom de l'objet dans la methode
 
-        # pour chaque déplacement possible dans la liste des déplacements possibles
-        for travel_possible in list_travel_possible: 
-            # direction temporaire est = à la pos. X de l'entité + le déplacement possible (modulo), et la position Y de l'entité + le déplacement possible (modulo)
-            temporary_direction = ((entity_pos_x + travel_possible[0]) % self.width, (entity_pos_y + travel_possible[1]) % self.length)
-            #  SI la direction temporaire N'EST PAS DANS la liste des poissons (positions actuelles) et N'EST PAS DANS la liste des requins,  
-            if temporary_direction not in self.list_fishes and temporary_direction not in self.list_sharks:
-                # On ajoute la direction temporaire dans la listes des cellules adjacentes
-                list_adjacentes_cells += [temporary_direction]
+    #  TODO remarque : il ne fallait rien mettre entre les parenthèses de fish.move_prey() et fish.move_prey(), pourquoi ? je ne sais pas !
 
-        direction = random.randint(0, len(list_adjacentes_cells) -1) # my_direction = la direction choisi aléatiorement pour un poisson précis
 
-        # List Fishes: [(5, 7), (9, 2), (4, 7)]
-        # Fish #1
-        # Postion 5, 7 (x, y)
-        # 1ere boucle
-        #   [(5, 8), (6, 7), (5, 6), (4, 7)]
-        # 2eme boucle
-        #   if il y a (5, 8) dans List Fishes
-        #   if il y a (6, 7) dans List Fishes
-        #   if il y a (5, 6) dans List Fishes
-        #   if il y a (4, 7) dans List Fishes
 
-#  référence pour plus tard (déplacement REQUINS)
-        # for dx, dy in travel_possible: # pour chaque direction (direction x et direction y) dans 'directions_possibles'
-        #     self.new_x, self.new_y = (self.pos_x + dx) % self.width, (self.pos_y + dy) % self.length # nouvelle position x et nouvelle position y sont = à [position x actuelle + direction x] et [position y actuelle + direction y]
-        #     if self.world_map[self.new_x][self.new_y] == self.drops: # SI la nouvelle position de x et la nouvelle position y est == icône 'gouttes'
-        #         list_adjacentes_cells.append((dx, dy)) # => ajout des nouvelles position x et y la liste
+class Fish:
+    def __init__(self, world, x, y ):
+        self.world = world
+        self.x = x
+        self.y = y
+        self.type_id = 1
+        self.icons_fish = '\U0001f420'
+        self.gestation = 0
+        self.gestation_time = 8
 
-        # return random.shuffle(self.list_adjacentes_cells) # génère une direction aléatoire
-        return list_adjacentes_cells[direction]
+    
+# on crée une méthode pour récupérer les cases disponibles pour le déplacement futur des poissons (ainsi que les requins plus tard)
+# MEMO : X(rangées ou lignes) = (0, 1) = bas et (0, -1) = haut, | Y(colonne) = (1, 0) = droite et (-1, 0) = à gauche
 
-    def move_creatures(self):
-        for x, y in self.list_fishes:
-            direction = self.adjacentes_empty_cells(x, y) # pour chaque poisson on récupère ses possibilités de déplacements
-            new_pos_x = direction[0] # nouvelle position x récup précéd. en ligne 100
-            new_pos_y = direction[1] # nouvelle position y récup précéd. en ligne 100
-            self.world_map[x][y] = self.drops
-            self.world_map[new_pos_x][new_pos_y] = self.my_fishes.icons_fish
+    def adjacent_empty_cells(self):
+        adjacentes_empty_cells = []
+        list_travel_possible = [(0, 1), (0, -1), (1, 0), (-1, 0)]
 
-#  TODO : Gérer la MàJ de list_fishes pour enlever le déplacement effectué et ajouter la nouvelle position du poisson
-#  Ex. mon poisson été en 5.7 et il se déplace en 6.7 (visuellement ok, dans le code pas ok)
-#  "en gros on a déménagé mais on a pas fait le changement d'adresse" 
-# to do (tout collé) commentaire mis en avant
+        for dx, dy in list_travel_possible: # pour chaque direction (direction x et direction y) dans 'directions_possibles'
+            new_x, new_y = (self.x + dx) % self.world.width, (self.y + dy) % self.world.length
+            # SI 0 est plus petit que largeur et que 0 est plus petit que longueur et que la nouvelle position x et y est un goutte d'eau :
+            if self.world.world_map[new_x][new_y] == 0:
+                adjacentes_empty_cells.append((new_x, new_y)) # alors la nouvelle position x et y est apporter dans la liste des cases adjacentes vides
+
+        return adjacentes_empty_cells # et on retourne cette liste
+
+        """ 
+        List Fishes: [(5, 7), (9, 2), (4, 7)]
+        MEMO de 'def adjacent_empty_cells()' :
+        Fish #1
+        Postion 5, 7 (x, y)
+        1ere boucle va donner des directions possibles
+          [(5, 8), (6, 7), (5, 6), (4, 7)] --> list_adjacent_cells
+        condition va vérifier ..
+          if il y a (5, 8) dans List Fishes
+          if il y a (6, 7) dans List Fishes
+          if il y a (5, 6) dans List Fishes
+          if il y a (4, 7) dans List Fishes
+          
+        """
+    
+    def move_prey(self):
+        # T'avais grave raison Melo (she is the best) !!!! :) Random.choice !!
+        empty_cells = self.adjacent_empty_cells()
+        if not empty_cells:
+            self.gestation += 1
+            return
+        else:
+            direction = random.choice(self.adjacent_empty_cells()) # je choisi un élément au hasard dans la liste (élément = cases adjacentes vides dispo)
+            dx, dy = direction 
+            new_x = (self.x + dx) % self.world.length
+            new_y = (self.y + dy) % self.world.width
+            if self.gestation >= self.gestation_time:
+                self.reproduct_prey()
+                self.gestation = 0
+            else:
+                self.world.world_map[new_x][new_y] = self.icons_fish
+                self.world.world_map[self.x][self.y] = self.world.water_drop
+                self.x, self.y = new_x, new_y
+                self.gestation += 1
+
+    def reproduct_prey(self):
+        baby_fish = Fish(self.world, self.x, self.y)
+        self.world.list_fishes.append(baby_fish)
+        self.world.world_map[self.x][self.y] = self.world.water_drop
         
 
 
-class Fishes(World):
-    # création des poissons
-    def __init__(self, type_id, icons_fish):
-        self.type_id = type_id
-        self.icons_fish = icons_fish
+class Shark(Fish):
+    def __init__(self,world, x, y ):
+        self.x = x
+        self.y = y
+        self.world = world
+        self.type_id = 2
+        self.icons_shark = '\U0001f988'
+        self.energy = 10
+        self.gestation = 0
+        self.gestation_time = 40
 
-    # permet de récupérer l'icônes 'poisson'
-    def return_icons_fish(self):
-        return self.icons_fish
+
+    def move_carnivore(self):
+        # for empty_cells in self.adjacent_empty_cells():
+        empty_cells = self.adjacent_empty_cells()
+        if not empty_cells:
+            self.gestation += 1
+            return
+        else:
+            self.following_prey()
+        if not self.following_prey():
+            if empty_cells:
+                direction = random.choice(self.adjacent_empty_cells()) # je choisi un élément au hasard dans la liste (élément = cases adjacentes vides dispo)
+                dx, dy = direction
+                new_x = (self.x + dx) % self.world.length
+                new_y = (self.y + dy) % self.world.width
+                if self.gestation >= self.gestation_time:
+                    self.reproduct_sharks()
+                    self.gestation = 0
+                else:
+                    self.world.world_map[new_x][new_y] = self.icons_shark
+                    self.world.world_map[self.x][self.y] = self.world.water_drop
+                    self.x, self.y = new_x, new_y
+                    self.gestation += 1
+
+    def following_prey(self):
+        fish_nearby = None
+        for fish in self.world.list_fishes:
+            if abs(self.x - fish.x) <= 1 and abs(self.y - fish.y) <= 1:
+                fish_nearby = fish
+        if fish_nearby:
+            # Si un poisson est proche, se déplacer vers lui
+            if self.x < fish_nearby.x:
+                new_x, new_y = self.x + 1, self.y
+            elif self.x > fish_nearby.x:
+                new_x, new_y = self.x - 1, self.y
+            elif self.y < fish_nearby.y:
+                new_x, new_y = self.x, self.y + 1
+            else:
+                new_x, new_y = self.x, self.y - 1
+            if self.gestation >= self.gestation_time:
+                self.reproduct_sharks()
+                self.gestation = 0
+            else:
+                self.world.world_map[self.x][self.y] = 0
+                self.world.world_map[new_x][new_y] = '\U0001f988'
+                self.x, self.y = new_x, new_y
+                self.gestation += 1
+
+    def reproduct_sharks(self):
+        baby_shark = Shark(self.world, self.x, self.y)
+        self.world.list_sharks.append(baby_shark)
+        self.world.world_map[self.x][self.y] = self.world.water_drop
     
-    def move_fishes(self):
+    def starvation(self):
+        if self.energy <= 0:
+            self.world.world_map[self.x][self.y] = 0
+            self.world.list_sharks.remove(self)
+        else:
+            self.energy -= 1
+
+    def eat_prey(self):
+        for fish in self.world.list_fishes:
+            if (abs(self.x - fish.x) <= 1 and abs(self.y - fish.y) == 0) or (abs(self.x - fish.x) == 0 and abs(self.y - fish.y) <= 1):
+                self.world.world_map[fish.x][fish.y] = 0
+                self.energy += 2
+                self.world.list_fishes.remove(fish)
+
+
+
+class Simulation:
+    def __init__(self, length, width, fish, shark, delay_chronon, cell_size):
+        self.world = World(length,width)
+        self.chronons = 0
+        self.delay_chronon = delay_chronon
+        self.on= True
+        self.fish = fish
+        self.shark= shark
+        self.cell_size = cell_size  # Nouvel attribut pour la taille des cellules
+
+        # Initialisation des données pour le graphique
+        self.time = [0]
+        self.list_fishes_data = [self.fish]
+        self.list_sharks_data = [self.shark]
+
+    def initialisation(self):
+        # Initialisation de Pygame
+        pygame.init()
+        width = self.world.width * self.cell_size  # Calcul de la taille de l'écran en fonction des cellules
+        length = self.world.length * self.cell_size # Calcul de la taille de l'écran en fonction des cellules
+        screen = pygame.display.set_mode((width, length + 80))
+        pygame.display.set_caption("Projet Wa_tor")
+
+        # Chargement des images
+        fish_picture = pygame.image.load("fish.png").convert_alpha()
+        shark_picture= pygame.image.load("shark.png").convert_alpha()
+
+        # Redimensionnement des images en fonction de la taille de la cellule
+        fish_picture = pygame.transform.scale(fish_picture, (self.cell_size, self.cell_size))
+        shark_picture = pygame.transform.scale(shark_picture, (self.cell_size, self.cell_size))
+        color_background = (0, 127, 255)
+        self.world.populate(self.list_fishes, self.list_sharks)
+
+        running = True
+        font = pygame.font.Font(None, 25)
+
+        # Initialisation du graphique
+        plt.ion()
+        fig, ax = plt.subplots()
+        ax.set_title("Evolution of fish and shark numbers")
+        ax.set_xlabel("Time")
+        ax.set_ylabel("Number")
+
+        fishes_line, = ax.plot(self.time, self.list_fishes_data, label="Fishes")
+        sharks_line, = ax.plot(self.time, self.list_sharks_data, label="Sharkes")
+
+        ax.legend(loc="upper left")
+
+        plt.show()
+
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.ending_simulation()
+            screen.fill((255, 255, 255))
+
+            # Appel des méthodes de déplacement et d'interaction des poissons et requins
+            for fish in self.world.list_fishes:
+                fish.move_prey()
+            for shark in self.world.list_sharks:
+                shark.move_carnivore()
+                shark.starvation()
+                shark.eat_prey()
+            for fish in self.world.list_fishes:
+                self.world.world_map[fish.x][fish.y] = '\U0001f41f' #poisson
+            for shark in self.world.nb_sharks:
+                self.world.world_map[shark.x][shark.y] = '\U0001f988' #requin
+
+            # Dessin des cellules
+            for i in range(self.world.length):
+                for j in range(self.world.width):
+                    cell = self.world.world_map[i][j]
+                    x = j * self.cell_size
+                    y = i * self.cell_size
+                    pygame.draw.rect(screen, color_background, (x, y, self.cell_size ,self.cell_size))
+                    if cell == '\U0001f41f':
+                        screen.blit(fish_picture, (x, y))
+                    elif cell == '\U0001f988':
+                        screen.blit(shark_picture, (x, y))
+
+            # Affichage des informations
+            text_chronons = font.render(f"Chronons: {self.chronons}", True, (0, 0, 0))
+            shark_txt = font.render(f"Sharks: {len(self.world.list_sharks)}", True, (0, 0, 0))
+            fish_txt= font.render(f"Fishes: {len(self.world.list_fishes)}", True, (0, 0, 0))
+            screen.blit(text_chronons, (10, length + 10))
+            screen.blit(shark_txt, (10, length + 40))
+            screen.blit(fish_txt (10, length + 60))
+            pygame.display.flip()
+            self.chronons += 1
+            pygame.time.delay(self.delay_chronon)
+
+            # Mise à jour des données du graphique
+            self.temps.append(self.chronons)
+            self.list_fishes_data.append(len(self.world.list_fishes))
+            self.list_sharks_data.append(len(self.world.list_sharks))
+
+            # Mise à jour du graphique en temps réel
+            fishes_line.set_data(self.time, self.list_fishes_data)
+            sharks_line.set_data(self.time, self.list_sharks_data)
+
+            ax.relim()
+            ax.autoscale_view()
+
+            plt.pause(0.01)
+            plt.draw()
+
+            pygame.display.flip()
+            self.chronons += 1
+            pygame.time.delay(self.delay_chronon)
+
+    def manage_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.ending_simulation()
+
+    def update(self):
+        self.move_prey()
+        self.shark.starvation()
+        self.move_carnivore()
+        self.shark.eat_prey()
+        self.chronons += 1
+        pygame.time.delay(self.delay_chronon)
+
+    def display(self):
         pass
 
-#     def reproduct_fishes(self):
-#         pass
+    def on(self):
+        return self.on
+
+    def ending_simulation(self):
+        self.on= False
+        pygame.quit()
 
 
-class Sharks(Fishes):
-    # Créations requins :
-    def __init__(self, type_id, icons_shark):
-        self.type_id = type_id
-        self.icons_shark = icons_shark
-        self.pos_shark = 0
-
-    def return_icons_shark(self):
-        return self.icons_shark
-    
-#     def move_sharks(self):
-#         pass
-
-#     def reproduct_sharks(self):
-#         pass
-    
-# je donne des valeurs pour 'Monde.def _ _init_ _' et 'def see_world'
-my_world = World(10, 10, '\U0001f4a7') # donc :  'def __init__(self, length=10, wiconsth=10):'
-my_world.populate_world(10, 2)
-my_world.see_world()
-
-
-# N'arrive pas à afficher nombre de poissons et nombre de requins (à voir sur la fin)
-# my_world(f"Nombre de poissons : {}")
-
-# Gestion du temps :
-chronons = 0
-while chronons < 100:
-    os.system('clear')
-
-    # deplacement_requin.starvation()
-    my_world.move_creatures()
-    my_world.see_world()
-    print(f"Nombre de tour(s) : {chronons}")
-    print()
-    chronons += 1
-    time.sleep(0.8)
+   

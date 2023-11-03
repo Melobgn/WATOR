@@ -1,130 +1,76 @@
-"""
-partie du Nouveau code du 01/11/2023
-effectué totalement seule et sans GPT
-Plutôt compris, reste encore beaucoup de chose à améliorer 
-Blocage à partir des boucles for dans méthode populate_world (line 45 et 53)
- => suite dans develop.py
 
-"""
-
-import os
-import time
-import random
+class Requin(Poisson):
+    def __init__(self, monde, x, y):
+        super().__init__(monde, x, y)
+        self.energie = 10
+        self.temps_de_reproduction = 20
+        self.gestation = 0
 
 
-class World:
-    def __init__(self, length, width, water_drop):
-        # je donne une notion de longueur(=length) et une largeur(=width) au monde
-        self.length = length
-        self.width = width
-        self.drops = water_drop
-        # je crée une matrice vide de taille length * width
-        self.world = [[self.drops for _ in range(width)] for _ in range(length)]
-        # je crée une liste de liste de requins et une liste de poissons
-        self.list_fishes = []
-        self.list_sharks = []
+    def deplacer_requin(self):
+        cases_vides = self.cases_vides_adjacentes()
+        if not cases_vides:
+            self.gestation += 1
+            return
+        elif cases_vides:
+            self.cases_poissons_miam()
+        if not self.cases_poissons_miam():
+            if cases_vides:
+            # Si aucun poisson proche, se déplacer vers une case vide aléatoire
+                direction_choisie = random.choice(cases_vides)
+                dx, dy = direction_choisie
+                new_x = (self.x + dx) % self.monde.longueur
+                new_y = (self.y + dy) % self.monde.hauteur
+                if self.gestation >= self.temps_de_reproduction:
+                    self.reproduction_requin()
+                    self.gestation = 0
+                else:
+                    self.monde.grille[self.x][self.y] = 0
+                    self.monde.grille[new_x][new_y] = '\U0001f988'
+                    self.x, self.y = new_x, new_y
+                    self.gestation += 1
         
+    def cases_poissons_miam(self):
+        poisson_proche = None
+        for poiscaille in self.monde.poissons:
+            if abs(self.x - poiscaille.x) <= 1 and abs(self.y - poiscaille.y) <= 1:
+                poisson_proche = poiscaille
+        if poisson_proche:
+            # Si un poisson est proche, se déplacer vers lui
+            if self.x < poisson_proche.x:
+                new_x, new_y = self.x + 1, self.y
+            elif self.x > poisson_proche.x:
+                new_x, new_y = self.x - 1, self.y
+            elif self.y < poisson_proche.y:
+                new_x, new_y = self.x, self.y + 1
+            else:
+                new_x, new_y = self.x, self.y - 1
+            if self.gestation >= self.temps_de_reproduction:
+                self.reproduction_requin()
+                self.gestation = 0
+            else:
+                self.monde.grille[self.x][self.y] = 0
+                self.monde.grille[new_x][new_y] = '\U0001f988'
+                self.x, self.y = new_x, new_y
+                self.gestation += 1
+        
+            
+        
+    def starvation(self):
+        if self.energie <= 0:
+            self.monde.grille[self.x][self.y] = 0
+            self.monde.requins.remove(self)
+        else:
+            self.energie -= 1
 
-    # je crée une fonction pour afficher le monde (=see the world) :
-    def see_world(self):
-        for row in self.world:
-            print(*row)
+    def manger_poisson(self):
+        for poiscaille in self.monde.poissons:
+            if (abs(self.x - poiscaille.x) <= 1 and abs(self.y - poiscaille.y) == 0) or (abs(self.x - poiscaille.x) == 0 and abs(self.y - poiscaille.y) <= 1):
+                self.monde.grille[poiscaille.x][poiscaille.y] = 0
+                self.energie += 1
+                self.monde.poissons.remove(poiscaille)
 
-    """
-    À CE STADE LE CODE AFFICHE UNE MATRICE DE '0' AVEC UNE LARGEUR DE 10 ET UNE LONGUEUR DE 10
-    """
-
-# Puis on peuple le monde
-    def populate_world(self, nb_fishes, nb_sharks):
-        self.nb_fishes = nb_fishes
-        self.nb_sharks = nb_sharks
-        # CORRECTION : Pas placé au bon endroit (⇡) .voir:newcode
-        self.coord_possible = [(x, y) for x in range(self.width) for y in range(self.length)]
-        random.shuffle(self.coord_possible)
-
-        # ajouter les poissons
-        for _ in range(self.nb_fishes):
-            if not self.coord_possible:
-                break
-            x, y = self.coord_possible.pop()
-            self.world[x][y] = Fishes.__init__
-            self.list_fishes.append((x, y))
-
-        #  ajouter les requins
-        for _ in range(self.nb_sharks):
-            if not self.coord_possible:
-                break
-            x, y = self.coord_possible.pop()
-            self.world[x][y] = Fishes.__init__
-            self.list_sharks.append((x, y))
-
-#  CORRECTION : les deux identités déplacés dans leur classes respectives
-class Fishes(World):
-    # Création des poissons
-    def __init__(self, type_id, icons):
-        self.type_id = type_id
-        self.icons = icons
-        self.pos_fish = self.coord_possible
-
-# REQUINS
-class Sharks(World):
-    # Créations requins :
-    def __init__(self, type_id, icons):
-        self.type_id = type_id
-        self.icons = icons
-        self.pos_shark = self.coord_possible
-
-
-# je donne des valeurs pour 'Monde.def _ _init_ _' et 'def see_world'
-my_world = World(10, 10, '\U0001f4a7') # donc :  'def __init__(self, length=10, wiconsth=10):'
-my_world.see_world()
-my_world.populate_world(10, 2)
-
-#  CORRECTION : déplacement dans la Word > 'init'
-my_fishes = Fishes(1, '\U0001f41f')
-my_sharks = Sharks(2, '\U0001f988') 
-
-# N'arrive pas à afficher nombre de poissons et nombre de requins (à voir sur la fin)
-# my_world(f"Nombre de poissons : {}")
-
-# Gestion du temps :
-chronons = 0
-while chronons < 100:
-    os.system('clear')
-
-    # deplacement_requin.starvation()
-    my_world.see_world()
-    print(f"Nombre de tour(s) : {chronons}")
-    print()
-    chronons += 1
-    time.sleep(0.8)
-
-
-
-
-
-#  structure classe mise de côté pour plus tard 
-
-
-#     def adjacentes_cells(self, monde):
-#         pass
-#         # # ADJACENTE : qui se trouve dans le voisinage immédiat !!!
-#         # cases_adjacentes = []
-#         # # permet d'indiquer comment les poissons se déplacent : X(rangées ou lignes) = (0, 1) = bas, (0, -1) = haut, | Y(colonne) = (1, 0) = droite, (-1, 0) = à gauche
-#         # deplacement_possible = [(0, 1), (1, 0), (0, -1), (-1, 0)]
-#         # # directions_possibles = deplacement_possible[:]
-#         # # condition
-#         # # random.shuffle(directions_possibles) # line 48 et 49 génère une direction aléatoire : (0, 1) ou (1, 0) ou (0, -1) ou (-1, 0)
-
-#         # for dx, dy in deplacement_possible: # pour chaque direction (direction x et direction y) dans 'directions_possibles'
-#         #     new_x, new_y = (self.x + dx) % self.largeur, (self.y + dy) % self.longueur # nouvelle position x et nouvelle position y sont = à [position x actuelle + direction x] et [position y actuelle + direction y]
-#         #     if self.monde.monde[new_x][new_y] == '\U0001f4a7': # '== eau'
-#         #         cases_adjacentes.append((dx, dy))
-
-#         # return cases_adjacentes
-
-#     def move_fishes(self):
-#         pass
-
-#     def reproduct_fishes(self):
-#         pass
+    def reproduction_requin(self):
+        requin_bebe = Requin(self.monde, self.x, self.y)
+        self.monde.requins.append(requin_bebe)
+        self.monde.grille[self.x][self.y] = '\U0001f988'
