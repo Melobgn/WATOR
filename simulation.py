@@ -12,6 +12,8 @@ class World:
         self.world_map = [[self.water_drop for _ in range(length)] for _ in range(height)]
         self.list_fishes = []
         self.list_sharks = []
+        self.available_cells = [(x, y) for x in range(length) for y in range(height)]  # Suivre les cellules disponibles
+
 
     def see_world(self):
         for row in self.world_map:
@@ -59,7 +61,7 @@ class Fish:
         self.type_id = 1
         self.icons_fish = '\U0001f420'
         self.gestation = 0
-        self.gestation_time = 10
+        self.gestation_time = 20
 
     def adjacent_empty_cells(self):
         
@@ -72,12 +74,17 @@ class Fish:
             if self.world.world_map[new_x][new_y] == 0:
                 empty_cells.append((dx, dy))
 
-        return empty_cells
+        if empty_cells:
+            return empty_cells
+        else:
+            return
+        
 
     def move_prey(self):
         empty_cells = self.adjacent_empty_cells()
         if not empty_cells:
             self.gestation += 1
+            
             return
         else:
             dx, dy = random.choice(empty_cells)
@@ -104,6 +111,7 @@ class Shark(Fish):
         self.icons_shark = '\U0001f988'
         self.energy = 8
         self.gestation_time = 40
+        self.cannibalism_count = 0
 
     def move_carnivore(self):
         empty_cells = self.adjacent_empty_cells()
@@ -166,6 +174,15 @@ class Shark(Fish):
                 self.world.world_map[fish.x][fish.y] = 0
                 self.energy += 3
                 self.world.list_fishes.remove(fish)
+    
+    def cannibalism(self):
+        if self.energy < 5:
+            for shark in self.world.list_sharks:
+                if (abs(self.x - shark.x) <= 1 and abs(self.y - shark.y) == 0) or (abs(self.x - shark.x) == 0 and abs(self.y - shark.y) <= 1):
+                    self.world.world_map[shark.x][shark.y] = 0
+                    self.energy += 3
+                    self.world.list_sharks.remove(shark)
+                    self.cannibalism_count += 1
 
 
 class Simulation:
@@ -223,6 +240,7 @@ class Simulation:
                 fish.move_prey()
             for shark in self.world.list_sharks:
                 shark.move_carnivore()
+                shark.cannibalism()
                 shark.starvation()
                 shark.eat_prey()
             for fish in self.world.list_fishes:
