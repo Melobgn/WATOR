@@ -5,21 +5,21 @@ import sys
 def main():
     pygame.init()
 
-    simulation = Simulation(20, 20, 15, 10, 800, 30)
-    simulation.initialiser()
+    simulation = Simulation(50, 50, 1000, 40, 800, 10)
+    simulation.initialisation()
 
     running = True
 
     while running:
-        simulation.gerer_evenements()
-        simulation.mise_a_jour()
-        simulation.afficher()
+        simulation.manage_events()
+        simulation.update()
+        simulation.display()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
-    simulation.terminer_simulation()
+    simulation.ending_simulation()
     pygame.quit()
     sys.exit()
 

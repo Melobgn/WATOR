@@ -1,214 +1,211 @@
+import os
+import time
 import random
 import pygame
 import matplotlib.pyplot as plt
 
+class World:
+    def __init__(self, length, width):
+        self.length = length
+        self.width = width
+        self.water_drop = 0
+        self.world_map = [[self.water_drop for _ in range(width)] for _ in range(length)]
+        self.list_fishes = []
+        self.list_sharks = []
 
-
-class Monde:
-    def __init__(self, longueur, hauteur):
-        self.longueur = longueur
-        self.hauteur = hauteur
-        self.grille = [[0 for _ in range(longueur)] for _ in range(hauteur)]
-        self.poissons = []
-        self.requins = []
-
-    def affichage_monde(self):
-        for row in self.grille:
+    def see_world(self):
+        for row in self.world_map:
             print(*row)
+        print(f"Poissons : {len(self.list_fishes)}")
+        print(f"Requins : {len(self.list_sharks)}")
 
-    def peupler_le_monde(self, nb_poissons, nb_requins):
-        self.nb_poissons = nb_poissons
-        self.nb_requins = nb_requins
-        # random.seed(12)
-        coordonnees_possibles = [(x, y) for x in range(self.longueur) for y in range(self.hauteur)]
-        random.shuffle(coordonnees_possibles)
+    def populate(self, nb_fishes, nb_sharks):
+        coord_possible = [(x, y) for x in range(self.width) for y in range(self.length)]
+        random.shuffle(coord_possible)
 
-        for _ in range(self.nb_poissons):
-            if not coordonnees_possibles:
+        for _ in range(nb_fishes):  # Utiliser nb_fishes au lieu de self.nb_fishes
+            if not coord_possible:
                 break
-            x, y = coordonnees_possibles.pop()
-            self.grille[x][y] = '\U0001f41f'
-            poiscaille = Poisson(self, x, y)
-            self.poissons.append(poiscaille)
+            x, y = coord_possible.pop()
+            fish = Fish(self, x, y)
+            self.world_map[x][y] = fish.icons_fish
+            self.list_fishes.append(fish)
 
-        for _ in range(self.nb_requins):
-            if not coordonnees_possibles:
+        for _ in range(nb_sharks):  # Utiliser nb_sharks au lieu de self.nb_sharks
+            if not coord_possible:
                 break
-            x, y = coordonnees_possibles.pop()
-            self.grille[x][y] = '\U0001f988'
-            requinx = Requin(self, x, y)
-            self.requins.append(requinx)
+            x, y = coord_possible.pop()
+            shark = Shark(self, x, y)
+            self.world_map[x][y] = shark.icons_shark
+            self.list_sharks.append(shark)
 
+    def play_a_round(self):
+        for fish in self.list_fishes:
+            fish.move_prey()
+        for shark in self.list_sharks:
+            shark.starvation()
+            shark.move_carnivore()
+            shark.eat_prey()
+        for fish in self.list_fishes:
+            self.world_map[fish.x][fish.y] = fish.icons_fish
+        for shark in self.list_sharks:
+            self.world_map[shark.x][shark.y] = shark.icons_shark
 
-class Poisson:
-    def __init__(self, monde, x, y):
-        self.monde = monde
+class Fish:
+    def __init__(self, world, x, y):
+        self.world = world
         self.x = x
         self.y = y
-        self.temps_de_reproduction = 2
+        self.type_id = 1
+        self.icons_fish = '\U0001f420'
         self.gestation = 0
+        self.gestation_time = 10
 
-    def cases_vides_adjacentes(self):
-        deplacement_possible = [(0, 1), (1, 0), (0, -1), (-1, 0)]
-        random.shuffle(deplacement_possible)
-        cases_vides = []
+    def adjacent_empty_cells(self):
+        adjacent_empty_cells = []
+        list_travel_possible = [(0, 1), (0, -1), (1, 0), (-1, 0)]
 
-        for dx, dy in deplacement_possible:
-            new_x = (self.x + dx) % self.monde.longueur
-            new_y = (self.y + dy) % self.monde.hauteur
-            if self.monde.grille[new_x][new_y] == 0:
-                cases_vides.append((dx, dy))
+        for dx, dy in list_travel_possible:
+            new_x, new_y = (self.x + dx) % self.world.width, (self.y + dy) % self.world.length
+            if self.world.world_map[new_x][new_y] == 0:
+                adjacent_empty_cells.append((new_x, new_y))
 
-        return cases_vides
+        return adjacent_empty_cells
 
-    
-    def deplacer_poisson(self):
-        cases_vides = self.cases_vides_adjacentes()
-        if not cases_vides:
+    def move_prey(self):
+        empty_cells = self.adjacent_empty_cells()
+        if not empty_cells:
             self.gestation += 1
             return
-        elif cases_vides:
-            direction_choisie = random.choice(cases_vides)
-            dx, dy = direction_choisie
-            new_x = (self.x + dx) % self.monde.longueur
-            new_y = (self.y + dy) % self.monde.hauteur
-            if self.gestation >= self.temps_de_reproduction:
-                self.reproduction()
+        else:
+            direction = random.choice(empty_cells)
+            dx, dy = direction
+            new_x = (self.x + dx) % self.world.length
+            new_y = (self.y + dy) % self.world.width
+            if self.gestation >= self.gestation_time:
+                self.reproduct_prey()
                 self.gestation = 0
             else:
-                self.monde.grille[self.x][self.y] = 0
-                self.monde.grille[new_x][new_y] = '\U0001f41f'
+                self.world.world_map[new_x][new_y] = self.icons_fish
+                self.world.world_map[self.x][self.y] = self.world.water_drop
                 self.x, self.y = new_x, new_y
                 self.gestation += 1
 
+    def reproduct_prey(self):
+        baby_fish = Fish(self.world, self.x, self.y)
+        self.world.list_fishes.append(baby_fish)
+        self.world.world_map[self.x][self.y] = self.world.water_drop
 
-    def reproduction(self):
-        poisson_bebe = Poisson(self.monde, self.x, self.y)
-        self.monde.poissons.append(poisson_bebe)
-        self.monde.grille[self.x][self.y] = '\U0001f41f'
-            
+class Shark(Fish):
+    def __init__(self, world, x, y):
+        super().__init__(world, x, y)
+        self.type_id = 2
+        self.icons_shark = '\U0001f988'
+        self.energy = 8
+        self.gestation_time = 40
 
-class Requin(Poisson):
-    def __init__(self, monde, x, y):
-        super().__init__(monde, x, y)
-        self.energie = 10
-        self.temps_de_reproduction = 20
-        self.gestation = 0
-
-
-    def deplacer_requin(self):
-        cases_vides = self.cases_vides_adjacentes()
-        if not cases_vides:
+    def move_carnivore(self):
+        empty_cells = self.adjacent_empty_cells()
+        if not empty_cells:
             self.gestation += 1
             return
-        elif cases_vides:
-            self.cases_poissons_miam()
-        if not self.cases_poissons_miam():
-            if cases_vides:
-            # Si aucun poisson proche, se déplacer vers une case vide aléatoire
-                direction_choisie = random.choice(cases_vides)
-                dx, dy = direction_choisie
-                new_x = (self.x + dx) % self.monde.longueur
-                new_y = (self.y + dy) % self.monde.hauteur
-                if self.gestation >= self.temps_de_reproduction:
-                    self.reproduction_requin()
+        else:
+            if not self.following_prey():
+                direction = random.choice(empty_cells)
+                dx, dy = direction
+                new_x = (self.x + dx) % self.world.length
+                new_y = (self.y + dy) % self.world.width
+                if self.gestation >= self.gestation_time:
+                    self.reproduct_sharks()
                     self.gestation = 0
                 else:
-                    self.monde.grille[self.x][self.y] = 0
-                    self.monde.grille[new_x][new_y] = '\U0001f988'
+                    self.world.world_map[new_x][new_y] = self.icons_shark
+                    self.world.world_map[self.x][self.y] = self.world.water_drop
                     self.x, self.y = new_x, new_y
                     self.gestation += 1
-        
-    def cases_poissons_miam(self):
-        poisson_proche = None
-        for poiscaille in self.monde.poissons:
-            if abs(self.x - poiscaille.x) <= 1 and abs(self.y - poiscaille.y) <= 1:
-                poisson_proche = poiscaille
-        if poisson_proche:
-            # Si un poisson est proche, se déplacer vers lui
-            if self.x < poisson_proche.x:
+
+    def following_prey(self):
+        fish_nearby = None
+        for fish in self.world.list_fishes:
+            if abs(self.x - fish.x) <= 1 and abs(self.y - fish.y) <= 1:
+                fish_nearby = fish
+        if fish_nearby:
+            if self.x < fish_nearby.x:
                 new_x, new_y = self.x + 1, self.y
-            elif self.x > poisson_proche.x:
+            elif self.x > fish_nearby.x:
                 new_x, new_y = self.x - 1, self.y
-            elif self.y < poisson_proche.y:
+            elif self.y < fish_nearby.y:
                 new_x, new_y = self.x, self.y + 1
             else:
                 new_x, new_y = self.x, self.y - 1
-            if self.gestation >= self.temps_de_reproduction:
-                self.reproduction_requin()
+            if self.gestation >= self.gestation_time:
+                self.reproduct_sharks()
                 self.gestation = 0
             else:
-                self.monde.grille[self.x][self.y] = 0
-                self.monde.grille[new_x][new_y] = '\U0001f988'
+                self.world.world_map[self.x][self.y] = 0
+                self.world.world_map[new_x][new_y] = self.icons_shark
                 self.x, self.y = new_x, new_y
                 self.gestation += 1
-        
-            
-        
+
+    def reproduct_sharks(self):
+        baby_shark = Shark(self.world, self.x, self.y)
+        self.world.list_sharks.append(baby_shark)
+        self.world.world_map[self.x][self.y] = self.world.water_drop
+
     def starvation(self):
-        if self.energie <= 0:
-            self.monde.grille[self.x][self.y] = 0
-            self.monde.requins.remove(self)
+        if self.energy <= 0:
+            self.world.world_map[self.x][self.y] = 0
+            self.world.list_sharks.remove(self)
         else:
-            self.energie -= 1
+            self.energy -= 1
 
-    def manger_poisson(self):
-        for poiscaille in self.monde.poissons:
-            if (abs(self.x - poiscaille.x) <= 1 and abs(self.y - poiscaille.y) == 0) or (abs(self.x - poiscaille.x) == 0 and abs(self.y - poiscaille.y) <= 1):
-                self.monde.grille[poiscaille.x][poiscaille.y] = 0
-                self.energie += 1
-                self.monde.poissons.remove(poiscaille)
+    def eat_prey(self):
+        for fish in self.world.list_fishes:
+            if (abs(self.x - fish.x) <= 1 and abs(self.y - fish.y) == 0) or (abs(self.x - fish.x) == 0 and abs(self.y - fish.y) <= 1):
+                self.world.world_map[fish.x][fish.y] = 0
+                self.energy += 3
+                self.world.list_fishes.remove(fish)
 
-    def reproduction_requin(self):
-        requin_bebe = Requin(self.monde, self.x, self.y)
-        self.monde.requins.append(requin_bebe)
-        self.monde.grille[self.x][self.y] = '\U0001f988'
- 
 class Simulation:
-    def __init__(self, longueur, hauteur, nb_poissons, nb_requins, delai_chronon, taille_cellule):
-        self.monde = Monde(longueur, hauteur)
+    def __init__(self, length, width, nb_fishes, nb_sharks, delay_chronon, cell_size):
+        self.world = World(length, width)
         self.chronons = 0
-        self.duree_chronon = delai_chronon
-        self.en_cours = True
-        self.nb_poissons = nb_poissons
-        self.nb_requins = nb_requins
-        self.taille_cellule = taille_cellule  # Nouvel attribut pour la taille des cellules
+        self.delay_chronon = delay_chronon
+        self.on = True
+        self.list_fishes = nb_fishes
+        self.list_sharks = nb_sharks
+        self.cell_size = cell_size
 
-        # Initialisation des données pour le graphique
-        self.temps = [0]
-        self.nb_poissons_data = [self.nb_poissons]
-        self.nb_requins_data = [self.nb_requins]
+        self.time = [0]
+        self.list_fishes_data = [nb_fishes]
+        self.list_sharks_data = [nb_sharks]
 
-    def initialiser(self):
-        # Initialisation de Pygame
+    def initialisation(self):
         pygame.init()
-        longueur = self.monde.longueur * self.taille_cellule  # Calcul de la taille de l'écran en fonction des cellules
-        hauteur = self.monde.hauteur * self.taille_cellule  # Calcul de la taille de l'écran en fonction des cellules
-        ecran = pygame.display.set_mode((longueur, hauteur + 80))
+        width = self.world.width * self.cell_size
+        length = self.world.length * self.cell_size
+        screen = pygame.display.set_mode((width, length + 80))
         pygame.display.set_caption("Projet Wa_tor")
 
-        # Chargement des images
-        image_poisson = pygame.image.load("fish.png").convert_alpha()
-        image_requin = pygame.image.load("shark.png").convert_alpha()
+        fish_picture = pygame.image.load("fish.png").convert_alpha()
+        shark_picture = pygame.image.load("shark.png").convert_alpha()
 
-        # Redimensionnement des images en fonction de la taille de la cellule
-        image_poisson = pygame.transform.scale(image_poisson, (self.taille_cellule, self.taille_cellule))
-        image_requin = pygame.transform.scale(image_requin, (self.taille_cellule, self.taille_cellule))
-        couleur_fond = (0, 127, 255)
-        self.monde.peupler_le_monde(self.nb_poissons, self.nb_requins)
+        fish_picture = pygame.transform.scale(fish_picture, (self.cell_size, self.cell_size))
+        shark_picture = pygame.transform.scale(shark_picture, (self.cell_size, self.cell_size))
+        color_background = (0, 127, 255)
+        self.world.populate(self.list_fishes, self.list_sharks)
 
         running = True
         font = pygame.font.Font(None, 25)
 
-        # Initialisation du graphique
         plt.ion()
         fig, ax = plt.subplots()
-        ax.set_title("Évolution du nombre de poissons et de requins")
-        ax.set_xlabel("Temps")
-        ax.set_ylabel("Nombre")
+        ax.set_title("Evolution of fish and shark numbers")
+        ax.set_xlabel("Time")
+        ax.set_ylabel("Number")
 
-        poissons_line, = ax.plot(self.temps, self.nb_poissons_data, label="Poissons")
-        requins_line, = ax.plot(self.temps, self.nb_requins_data, label="Requins")
+        fishes_line, = ax.plot(self.time, self.list_fishes_data, label="Fishes")
+        sharks_line, = ax.plot(self.time, self.list_sharks_data, label="Sharks")
 
         ax.legend(loc="upper left")
 
@@ -217,53 +214,48 @@ class Simulation:
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    self.terminer_simulation()
-            ecran.fill((255, 255, 255))
+                    self.ending_simulation()
+            screen.fill((255, 255, 255))
 
-            # Appel des méthodes de déplacement et d'interaction des poissons et requins
-            for poiscaille in self.monde.poissons:
-                poiscaille.deplacer_poisson()
-            for requinx in self.monde.requins:
-                requinx.deplacer_requin()
-                requinx.starvation()
-                requinx.manger_poisson()
-            for poiscaille in self.monde.poissons:
-                self.monde.grille[poiscaille.x][poiscaille.y] = '\U0001f41f' #poisson
+            for fish in self.world.list_fishes:
+                fish.move_prey()
+            for shark in self.world.list_sharks:
+                shark.move_carnivore()
+                shark.starvation()
+                shark.eat_prey()
+            for fish in self.world.list_fishes:
+                self.world.world_map[fish.x][fish.y] = '\U0001f41f'
 
-            for requinx in self.monde.requins:
-                self.monde.grille[requinx.x][requinx.y] = '\U0001f988' #requin
+            for shark in self.world.list_sharks:
+                self.world.world_map[shark.x][shark.y] = '\U0001f988'
 
-            # Dessin des cellules
-            for i in range(self.monde.hauteur):
-                for j in range(self.monde.longueur):
-                    cellule = self.monde.grille[i][j]
-                    x = j * self.taille_cellule
-                    y = i * self.taille_cellule
-                    pygame.draw.rect(ecran, couleur_fond, (x, y, self.taille_cellule, self.taille_cellule))
-                    if cellule == '\U0001f41f':
-                        ecran.blit(image_poisson, (x, y))
-                    elif cellule == '\U0001f988':
-                        ecran.blit(image_requin, (x, y))
+            for i in range(self.world.length):
+                for j in range(self.world.width):
+                    cell = self.world.world_map[i][j]
+                    x = j * self.cell_size
+                    y = i * self.cell_size
+                    pygame.draw.rect(screen, color_background, (x, y, self.cell_size, self.cell_size))
+                    if cell == '\U0001f41f':
+                        screen.blit(fish_picture, (x, y))
+                    elif cell == '\U0001f988':
+                        screen.blit(shark_picture, (x, y))
 
-            # Affichage des informations
-            texte_chronons = font.render(f"Chronons: {self.chronons}", True, (0, 0, 0))
-            texte_requins = font.render(f"Requins: {len(self.monde.requins)}", True, (0, 0, 0))
-            texte_poissons = font.render(f"Poissons: {len(self.monde.poissons)}", True, (0, 0, 0))
-            ecran.blit(texte_chronons, (10, hauteur + 10))
-            ecran.blit(texte_requins, (10, hauteur + 40))
-            ecran.blit(texte_poissons, (10, hauteur + 60))
+            text_chronons = font.render(f"Chronons: {self.chronons}", True, (0, 0, 0))
+            shark_txt = font.render(f"Sharks: {len(self.world.list_sharks)}", True, (0, 0, 0))
+            fish_txt = font.render(f"Fishes: {len(self.world.list_fishes)}", True, (0, 0, 0))
+            screen.blit(text_chronons, (10, length + 10))
+            screen.blit(shark_txt, (10, length + 40))
+            screen.blit(fish_txt, (10, length + 60))
             pygame.display.flip()
             self.chronons += 1
-            pygame.time.delay(self.duree_chronon)
+            pygame.time.delay(self.delay_chronon)
 
-            # Mise à jour des données du graphique
-            self.temps.append(self.chronons)
-            self.nb_poissons_data.append(len(self.monde.poissons))
-            self.nb_requins_data.append(len(self.monde.requins))
+            self.time.append(self.chronons)
+            self.list_fishes_data.append(len(self.world.list_fishes))
+            self.list_sharks_data.append(len(self.world.list_sharks))
 
-            # Mise à jour du graphique en temps réel
-            poissons_line.set_data(self.temps, self.nb_poissons_data)
-            requins_line.set_data(self.temps, self.nb_requins_data)
+            fishes_line.set_data(self.time, self.list_fishes_data)
+            sharks_line.set_data(self.time, self.list_sharks_data)
 
             ax.relim()
             ax.autoscale_view()
@@ -273,30 +265,14 @@ class Simulation:
 
             pygame.display.flip()
             self.chronons += 1
-            pygame.time.delay(self.duree_chronon)
+            pygame.time.delay(self.delay_chronon)
 
-    def gerer_evenements(self):
+    def manage_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                self.terminer_simulation()
+                self.ending_simulation()
 
-    def mise_a_jour(self):
-        self.poisson.se_deplacer()
-        self.requin.starvation()
-        self.requin.se_deplacer()
-        self.requin.manger_poisson()
-        self.chronons += 1
-        pygame.time.delay(self.duree_chronon)
-
-    def afficher(self):
-        pass
-
-    def en_cours(self):
-        return self.en_cours
-
-    def terminer_simulation(self):
-        self.en_cours = False
+    def ending_simulation(self):
+        self.on = False
         pygame.quit()
 
-
-   
