@@ -12,7 +12,7 @@ class World:
         self.world_map = [[self.water_drop for _ in range(length)] for _ in range(height)]
         self.list_fishes = []
         self.list_sharks = []
-        self.available_cells = [(x, y) for x in range(length) for y in range(height)]  # Suivre les cellules disponibles
+        self.available_cells = set([(x, y) for x in range(length) for y in range(height)])  # Suivre les cellules disponibles
 
 
     def see_world(self):
@@ -64,7 +64,7 @@ class Fish:
         self.icons_fish = '\U0001f420'
         self.gestation = 0
         self.gestation_time = 20
-
+        
     def adjacent_empty_cells(self):
         
         list_travel_possible = [(0, 1), (0, -1), (1, 0), (-1, 0)]
@@ -101,15 +101,13 @@ class Fish:
             self.gestation += 1
 
     def reproduct_prey(self):
-        if not self.world.available_cells:
-            return
         baby_x, baby_y = random.choice(list(self.world.available_cells))
-        baby_fish = Fish(self.world, baby_x, baby_y)
-        self.world.list_fishes.append(baby_fish)
-        self.world.world_map[baby_x][baby_y] = self.icons_fish
-        self.world.available_cells.remove((baby_x, baby_y))
-        self.world.available_cells.append((self.x, self.y))
-
+        if (baby_x, baby_y) in self.world.available_cells:
+            baby_fish = Fish(self.world, baby_x, baby_y)
+            self.world.list_fishes.append(baby_fish)
+            self.world.world_map[baby_x][baby_y] = self.icons_fish
+            self.world.available_cells.remove((baby_x, baby_y))
+            self.world.available_cells.add((self.x, self.y))
 class Shark(Fish):
     def __init__(self, world, x, y):
         super().__init__(world, x, y)
@@ -118,6 +116,7 @@ class Shark(Fish):
         self.energy = 8
         self.gestation_time = 40
         self.cannibalism_count = 0
+        self.cannibal = False
 
     def move_carnivore(self):
         empty_cells = self.adjacent_empty_cells()
@@ -161,11 +160,14 @@ class Shark(Fish):
                 self.world.world_map[new_x][new_y] = self.icons_shark
                 self.x, self.y = new_x, new_y
                 self.gestation += 1
+    
+    
 
     def reproduct_sharks(self):
-        baby_shark = Shark(self.world, self.x, self.y)
-        self.world.list_sharks.append(baby_shark)
-        self.world.world_map[self.x][self.y] = self.world.water_drop
+        if (self.x, self.y) in self.world.available_cells:
+            baby_shark = Shark(self.world, self.x, self.y)
+            self.world.list_sharks.append(baby_shark)
+            self.world.world_map[self.x][self.y] = 0
 
     def starvation(self):
         if self.energy <= 0:
