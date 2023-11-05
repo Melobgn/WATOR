@@ -167,7 +167,7 @@ class Shark(Fish):
         if (self.x, self.y) in self.world.available_cells:
             baby_shark = Shark(self.world, self.x, self.y)
             self.world.list_sharks.append(baby_shark)
-            self.world.world_map[self.x][self.y] = 0
+            self.world.world_map[self.x][self.y] = self.icons_shark
 
     def starvation(self):
         if self.energy <= 0:
@@ -300,5 +300,8 @@ class Simulation:
             pygame.display.flip()
 
     def ending_simulation(self):
+        total_cannibalism = sum(shark.cannibalism_count for shark in self.world.list_sharks)
+        average_cannibalism = total_cannibalism / len(self.world.list_sharks)
+        print(f"The average number of cannibalism incidents per shark is {average_cannibalism}.")
         self.on = False
         pygame.quit()
