@@ -63,7 +63,7 @@ class Fish:
         self.type_id = 1
         self.icons_fish = '\U0001f420'
         self.gestation = 0
-        self.gestation_time = 20
+        self.gestation_time = 22
         
     def adjacent_empty_cells(self):
         
@@ -108,13 +108,14 @@ class Fish:
             self.world.world_map[baby_x][baby_y] = self.icons_fish
             self.world.available_cells.remove((baby_x, baby_y))
             self.world.available_cells.add((self.x, self.y))
+
 class Shark(Fish):
     def __init__(self, world, x, y):
         super().__init__(world, x, y)
         self.type_id = 2
         self.icons_shark = '\U0001f988'
         self.energy = 8
-        self.gestation_time = 40
+        self.gestation_time = 35
         self.cannibalism_count = 0
         self.cannibal = False
 
@@ -136,7 +137,7 @@ class Shark(Fish):
                     self.world.world_map[new_x][new_y] = self.icons_shark
                     self.world.world_map[self.x][self.y] = self.world.water_drop
                     self.x, self.y = new_x, new_y
-                    self.gestation += 1
+        self.gestation += 1
 
     def following_prey(self):
         fish_nearby = None
@@ -164,10 +165,13 @@ class Shark(Fish):
     
 
     def reproduct_sharks(self):
-        if (self.x, self.y) in self.world.available_cells:
-            baby_shark = Shark(self.world, self.x, self.y)
+        baby_x, baby_y = random.choice(list(self.world.available_cells))
+        if (baby_x, baby_y) in self.world.available_cells:
+            baby_shark = Shark(self.world, baby_x, baby_y)
             self.world.list_sharks.append(baby_shark)
-            self.world.world_map[self.x][self.y] = self.icons_shark
+            self.world.world_map[baby_x][baby_y] = self.icons_shark
+            self.world.available_cells.remove((baby_x, baby_y))
+            self.world.available_cells.add((self.x, self.y))
 
     def starvation(self):
         if self.energy <= 0:
@@ -186,7 +190,7 @@ class Shark(Fish):
     def cannibalism(self):
         if self.energy < 5:
             for shark in self.world.list_sharks:
-                 if self != shark and ((abs(self.x - shark.x) <= 1 and abs(self.y - shark.y) == 0) or (abs(self.x - shark.x) == 0 and abs(self.y - shark.y) <= 1)):
+                if (abs(self.x - shark.x) <= 1 and abs(self.y - shark.y) == 0) or (abs(self.x - shark.x) == 0 and abs(self.y - shark.y) <= 1):
                     self.world.world_map[shark.x][shark.y] = 0
                     self.energy += 3
                     self.world.list_sharks.remove(shark)
@@ -300,8 +304,5 @@ class Simulation:
             pygame.display.flip()
 
     def ending_simulation(self):
-        total_cannibalism = sum(shark.cannibalism_count for shark in self.world.list_sharks)
-        average_cannibalism = total_cannibalism / len(self.world.list_sharks)
-        print(f"The average number of cannibalism incidents per shark is {average_cannibalism}.")
         self.on = False
         pygame.quit()
