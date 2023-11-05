@@ -194,10 +194,10 @@ class Shark(Fish):
 
 
 class Simulation:
-    def __init__(self, length, height, nb_fishes, nb_sharks, delay_chronon, cell_size):
-        self.world = World(length, height)
-        self.chronons = 0
+    def __init__(self, world,  nb_fishes, nb_sharks, delay_chronon, cell_size):
+        self.world = world
         self.delay_chronon = delay_chronon
+        self.chronons = 0
         self.on = True
         self.list_fishes = nb_fishes
         self.list_sharks = nb_sharks
@@ -206,6 +206,42 @@ class Simulation:
         self.time = [0]
         self.list_fishes_data = [nb_fishes]
         self.list_sharks_data = [nb_sharks]
+
+    def update(self):
+        for fish in self.world.list_fishes:
+            fish.move_prey()
+        for shark in self.world.list_sharks:
+            shark.move_carnivore()
+            shark.cannibalism()
+            shark.starvation()
+            shark.eat_prey()
+            shark.cannibalism()
+
+        for fish in self.world.list_fishes:
+            self.world.world_map[fish.x][fish.y] = '\U0001f41f'
+
+        for shark in self.world.list_sharks:
+            self.world.world_map[shark.x][shark.y] = '\U0001f988'
+
+        self.chronons += 1
+
+    def draw(self, screen, font, fish_picture, shark_picture):
+        screen.fill((0, 123, 167))
+        for y in range(self.world.height):
+            for x in range(self.world.length):
+                cell = self.world.world_map[x][y]
+                if cell == '\U0001f41f':
+                    screen.blit(fish_picture, (x*self.cell_size, y*self.cell_size))
+                elif cell == '\U0001f988':
+                    screen.blit(shark_picture, (x*self.cell_size, y*self.cell_size))
+
+        text_chronons = font.render(f"Chronons: {self.chronons}", True, (0, 0, 0))
+        shark_txt = font.render(f"Sharks: {len(self.world.list_sharks)}", True, (0, 0, 0))
+        fish_txt = font.render(f"Fishes: {len(self.world.list_fishes)}", True, (0, 0, 0))
+        screen.blit(text_chronons, (10, self.world.height*self.cell_size + 10))
+        screen.blit(shark_txt, (10, self.world.height*self.cell_size + 40))
+        screen.blit(fish_txt, (10, self.world.height*self.cell_size + 60))
+        pygame.display.flip()
 
     def initialisation(self):
         pygame.init()
@@ -219,7 +255,7 @@ class Simulation:
 
         fish_picture = pygame.transform.scale(fish_picture, (self.cell_size, self.cell_size))
         shark_picture = pygame.transform.scale(shark_picture, (self.cell_size, self.cell_size))
-        color_background = (0, 127, 255)
+
         self.world.populate(self.list_fishes, self.list_sharks)
 
         running = True
@@ -242,42 +278,10 @@ class Simulation:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.ending_simulation()
-            screen.fill((255, 255, 255))
 
-            for fish in self.world.list_fishes:
-                fish.move_prey()
-            for shark in self.world.list_sharks:
-                shark.move_carnivore()
-                shark.cannibalism()
-                shark.starvation()
-                shark.eat_prey()
-                shark.cannibalism()
-                
-            for fish in self.world.list_fishes:
-                self.world.world_map[fish.x][fish.y] = '\U0001f41f'
+            self.update()
+            self.draw(screen, font, fish_picture, shark_picture)
 
-            for shark in self.world.list_sharks:
-                self.world.world_map[shark.x][shark.y] = '\U0001f988'
-
-            for i in range(self.world.height):
-                for j in range(self.world.length):
-                    cell = self.world.world_map[i][j]
-                    x = j * self.cell_size
-                    y = i * self.cell_size
-                    pygame.draw.rect(screen, color_background, (x, y, self.cell_size, self.cell_size))
-                    if cell == '\U0001f41f':
-                        screen.blit(fish_picture, (x, y))
-                    elif cell == '\U0001f988':
-                        screen.blit(shark_picture, (x, y))
-
-            text_chronons = font.render(f"Chronons: {self.chronons}", True, (0, 0, 0))
-            shark_txt = font.render(f"Sharks: {len(self.world.list_sharks)}", True, (0, 0, 0))
-            fish_txt = font.render(f"Fishes: {len(self.world.list_fishes)}", True, (0, 0, 0))
-            screen.blit(text_chronons, (10, height + 10))
-            screen.blit(shark_txt, (10, height + 40))
-            screen.blit(fish_txt, (10, height + 60))
-            pygame.display.flip()
-            #self.chronons += 1
             pygame.time.delay(self.delay_chronon)
 
             self.time.append(self.chronons)
@@ -294,13 +298,6 @@ class Simulation:
             plt.draw()
 
             pygame.display.flip()
-            self.chronons += 1
-            pygame.time.delay(self.delay_chronon)
-
-    def manage_events(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.ending_simulation()
 
     def ending_simulation(self):
         self.on = False
