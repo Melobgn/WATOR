@@ -6,6 +6,13 @@ import matplotlib.pyplot as plt
 
 class World:
     def __init__(self, length, height):
+        """
+        Initialise le monde.
+
+        Args:
+            length (int): Longueur du monde.
+            height (int): Hauteur du monde.
+        """
         self.length = length
         self.height = height
         self.water_drop = 0
@@ -16,12 +23,23 @@ class World:
 
 
     def see_world(self):
+        """
+        Affiche l'état du monde avec le nombre de poissons et de requins.
+        """
         for row in self.world_map:
             print(*row)
         print(f"Poissons : {len(self.list_fishes)}")
         print(f"Requins : {len(self.list_sharks)}")
 
+
     def populate(self, nb_fishes, nb_sharks):
+        """
+        Peuple le monde avec un certain nombre de poissons et de requins.
+
+        Args:
+            nb_fishes (int): Nombre de poissons à peupler.
+            nb_sharks (int): Nombre de requins à peupler.
+        """
         coord_possible = list(self.available_cells)
         random.shuffle(coord_possible)
 
@@ -41,6 +59,7 @@ class World:
             self.world_map[x][y] = shark.icons_shark
             self.list_sharks.append(shark)
 
+
     def play_a_round(self):
         for fish in self.list_fishes:
             fish.move_prey()
@@ -55,18 +74,34 @@ class World:
         for shark in self.list_sharks:
             self.world_map[shark.x][shark.y] = shark.icons_shark
 
+
+
+
 class Fish:
     def __init__(self, world, x, y):
+        """
+        Initialise un poisson dans le monde.
+
+        Args:
+            world (World): Le monde dans lequel le poisson existe.
+            x (int): Coordonnée x du poisson.
+            y (int): Coordonnée y du poisson.
+        """
         self.world = world
         self.x = x
         self.y = y
-        self.type_id = 1
         self.icons_fish = '\U0001f420'
         self.gestation = 0
         self.gestation_time = 22
         
+
     def adjacent_empty_cells(self):
-        
+        """
+        Recherche les cellules vides adjacentes à ce poisson.
+
+        Returns:
+            list de tuples: Liste des coordonnées (dx, dy) des cellules vides adjacentes.
+        """
         list_travel_possible = [(0, 1), (0, -1), (1, 0), (-1, 0)]
         random.shuffle(list_travel_possible)
         empty_cells = []
@@ -83,6 +118,9 @@ class Fish:
         
 
     def move_prey(self):
+        """
+        Déplace le poisson dans le monde, gère la reproduction et la gestation.
+        """
         empty_cells = self.adjacent_empty_cells()
         if not empty_cells:
             self.gestation += 1
@@ -100,7 +138,11 @@ class Fish:
             self.x, self.y = new_x, new_y
             self.gestation += 1
 
+
     def reproduct_prey(self):
+        """
+        Fait se reproduire un poisson, créant un nouveau poisson à une cellule vide aléatoire.
+        """
         baby_x, baby_y = random.choice(list(self.world.available_cells))
         if (baby_x, baby_y) in self.world.available_cells:
             baby_fish = Fish(self.world, baby_x, baby_y)
@@ -109,17 +151,34 @@ class Fish:
             self.world.available_cells.remove((baby_x, baby_y))
             self.world.available_cells.add((self.x, self.y))
 
+
+
 class Shark(Fish):
     def __init__(self, world, x, y):
+        """
+        Initialise un requin dans le monde.
+
+        Args:
+            world (World): Le monde dans lequel le requin existe.
+            x (int): Coordonnée x du requin.
+            y (int): Coordonnée y du requin.
+        """
         super().__init__(world, x, y)
-        self.type_id = 2
         self.icons_shark = '\U0001f988'
         self.energy = 8
         self.gestation_time = 35
-        self.cannibalism_count = 0
         self.cannibal = False
 
+
+
     def move_carnivore(self):
+        """
+        Gère le déplacement du requin dans le monde.
+
+        - Le requin se déplace vers une cellule vide aléatoire s'il n'y a pas de proie à proximité.
+        - Gère la reproduction du requin.
+
+        """
         empty_cells = self.adjacent_empty_cells()
         if not empty_cells:
             self.gestation += 1
@@ -139,7 +198,14 @@ class Shark(Fish):
                     self.x, self.y = new_x, new_y
         self.gestation += 1
 
+
     def following_prey(self):
+        """
+        Vérifie si une proie est à proximité et la suit s'il y en a une.
+
+        Returns:
+            bool: True si une proie est suivie, False sinon.
+        """
         fish_nearby = None
         for fish in self.world.list_fishes:
             if abs(self.x - fish.x) <= 1 and abs(self.y - fish.y) <= 1:
@@ -165,6 +231,9 @@ class Shark(Fish):
     
 
     def reproduct_sharks(self):
+        """
+        Gère la reproduction des requins en créant un nouveau requin dans une cellule vide aléatoire.
+        """
         baby_x, baby_y = random.choice(list(self.world.available_cells))
         if (baby_x, baby_y) in self.world.available_cells:
             baby_shark = Shark(self.world, baby_x, baby_y)
@@ -173,32 +242,55 @@ class Shark(Fish):
             self.world.available_cells.remove((baby_x, baby_y))
             self.world.available_cells.add((self.x, self.y))
 
+
+
     def starvation(self):
+        """
+        Gère la faim du requin et le supprime du monde s'il n'a plus d'énergie.
+        """
         if self.energy <= 0:
             self.world.world_map[self.x][self.y] = 0
             self.world.list_sharks.remove(self)
         else:
             self.energy -= 1
 
+
     def eat_prey(self):
+        """
+        Gère le fait que le requin mange une proie s'il y en a une à proximité.
+        """
         for fish in self.world.list_fishes:
             if (abs(self.x - fish.x) <= 1 and abs(self.y - fish.y) == 0) or (abs(self.x - fish.x) == 0 and abs(self.y - fish.y) <= 1):
                 self.world.world_map[fish.x][fish.y] = 0
                 self.energy += 3
                 self.world.list_fishes.remove(fish)
+
     
     def cannibalism(self):
+        """
+        Gère le cannibalisme du requin, le fait de manger un autre requin à proximité s'il a faim.
+        """
         if self.energy < 5:
             for shark in self.world.list_sharks:
                 if (abs(self.x - shark.x) <= 1 and abs(self.y - shark.y) == 0) or (abs(self.x - shark.x) == 0 and abs(self.y - shark.y) <= 1):
                     self.world.world_map[shark.x][shark.y] = 0
                     self.energy += 3
                     self.world.list_sharks.remove(shark)
-                    self.cannibalism_count += 1
+                    
 
 
 class Simulation:
     def __init__(self, world,  nb_fishes, nb_sharks, delay_chronon, cell_size):
+        """
+        Initialise la simulation.
+
+        Args:
+            world (World): Le monde dans lequel se déroule la simulation.
+            nb_fishes (int): Nombre de poissons initiaux.
+            nb_sharks (int): Nombre de requins initiaux.
+            delay_chronon (int): Délai entre les chronons.
+            cell_size (int): Taille de la cellule pour l'affichage graphique.
+        """
         self.world = world
         self.delay_chronon = delay_chronon
         self.chronons = 0
@@ -212,6 +304,9 @@ class Simulation:
         self.list_sharks_data = [nb_sharks]
 
     def update(self):
+        """
+        Met à jour l'état du monde en faisant avancer d'un chronon la simulation.
+        """
         for fish in self.world.list_fishes:
             fish.move_prey()
         for shark in self.world.list_sharks:
@@ -230,6 +325,15 @@ class Simulation:
         self.chronons += 1
 
     def draw(self, screen, font, fish_picture, shark_picture):
+        """
+        Dessine l'état du monde dans la fenêtre graphique de la simulation.
+
+        Args:
+            screen: Fenêtre de la simulation.
+            font: Police de caractères.
+            fish_picture: Image du poisson.
+            shark_picture: Image du requin.
+        """
         screen.fill((0, 123, 167))
         for y in range(self.world.height):
             for x in range(self.world.length):
@@ -248,6 +352,9 @@ class Simulation:
         pygame.display.flip()
 
     def initialisation(self):
+        """
+        Initialise la fenêtre graphique de la simulation et exécute la boucle principale de la simulation.
+        """
         pygame.init()
         length = self.world.length * self.cell_size
         height = self.world.height * self.cell_size
@@ -304,5 +411,8 @@ class Simulation:
             pygame.display.flip()
 
     def ending_simulation(self):
+        """
+        Termine la simulation en fermant la fenêtre graphique.
+        """
         self.on = False
         pygame.quit()
