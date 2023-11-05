@@ -186,7 +186,7 @@ class Shark(Fish):
     def cannibalism(self):
         if self.energy < 5:
             for shark in self.world.list_sharks:
-                if (abs(self.x - shark.x) <= 1 and abs(self.y - shark.y) == 0) or (abs(self.x - shark.x) == 0 and abs(self.y - shark.y) <= 1):
+                 if self != shark and ((abs(self.x - shark.x) <= 1 and abs(self.y - shark.y) == 0) or (abs(self.x - shark.x) == 0 and abs(self.y - shark.y) <= 1)):
                     self.world.world_map[shark.x][shark.y] = 0
                     self.energy += 3
                     self.world.list_sharks.remove(shark)
